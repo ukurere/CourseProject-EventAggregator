@@ -11,8 +11,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../core/services/auth.service';
 import { EventsService } from '../../core/services/events.service';
 import { FiltersService } from '../../core/services/filters.service';
+import { UsersService } from '../../core/services/users.service';
 import { EventItem } from '../../core/models/event.model';
 import { FilterGroup } from '../../core/models/filter.model';
 import { EventCard } from '../../shared/components/event-card/event-card';
@@ -32,9 +34,13 @@ import { EventCard } from '../../shared/components/event-card/event-card';
   styleUrl: './feed.scss',
 })
 export class Feed implements OnInit {
+  private auth         = inject(AuthService);
   private eventsService = inject(EventsService);
   private filtersService = inject(FiltersService);
+  private usersService  = inject(UsersService);
   private snackBar = inject(MatSnackBar);
+
+  get userId() { return this.auth.currentUser()?.id ?? 0; }
 
   events = signal<EventItem[]>([]);
   filterGroups = signal<FilterGroup[]>([]);
@@ -101,10 +107,12 @@ export class Feed implements OnInit {
   }
 
   onMarkInteresting(event: EventItem) {
-    this.snackBar.open(`«${event.title}» позначено як цікаве`, '', { duration: 2000 });
+    this.usersService.setEventStatus(this.userId, event.id, { status: 'Interesting', isInCalendar: false })
+      .subscribe(() => this.snackBar.open(`«${event.title}» збережено ★`, '', { duration: 2000 }));
   }
 
   onAddToCalendar(event: EventItem) {
-    this.snackBar.open(`«${event.title}» додано до календаря`, '', { duration: 2000 });
+    this.usersService.setEventStatus(this.userId, event.id, { isInCalendar: true })
+      .subscribe(() => this.snackBar.open(`«${event.title}» додано до календаря 📅`, '', { duration: 2000 }));
   }
 }

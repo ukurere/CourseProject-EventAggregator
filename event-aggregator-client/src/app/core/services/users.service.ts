@@ -44,4 +44,12 @@ export class UsersService {
   setEventStatus(userId: number, eventId: number, status: EventStatus) {
     return this.http.post(`${this.base}/${userId}/events/${eventId}/status`, status);
   }
+
+  getSavedEvents(userId: number) {
+    return this.http.get<EventItem[]>(`${this.base}/${userId}/saved-events`);
+  }
+
+  getCalendarEvents(userId: number) {
+    return this.http.get<EventItem[]>(`${this.base}/${userId}/calendar-events`);
+  }
 }

@@ -4,122 +4,207 @@
 
 @if (!loading()) {
   <div class="profile-wrap">
+    <mat-tab-group animationDuration="200ms" class="profile-tabs">
 
-    <!-- ── Профіль ── -->
-    <section class="card">
-      <h2><mat-icon>person</mat-icon> Профіль</h2>
-      <mat-divider />
-
-      @if (user(); as u) {
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Ім'я</mat-label>
-            <input matInput [(ngModel)]="u.firstName" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Прізвище</mat-label>
-            <input matInput [(ngModel)]="u.lastName" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Email</mat-label>
-            <input matInput [value]="u.email" disabled />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Частота розсилки</mat-label>
-            <mat-select [(ngModel)]="u.reportFrequency">
-              <mat-option value="Daily">Щодня</mat-option>
-              <mat-option value="Weekly">Щотижня</mat-option>
-              <mat-option value="Monthly">Щомісяця</mat-option>
-            </mat-select>
-          </mat-form-field>
+      <!-- ══ Профіль ══════════════════════════════════════════════════════ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>person</mat-icon>&nbsp;Профіль
+        </ng-template>
+        <div class="tab-content">
+          @if (user(); as u) {
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Ім'я</mat-label>
+                <input matInput [(ngModel)]="u.firstName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Прізвище</mat-label>
+                <input matInput [(ngModel)]="u.lastName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Email</mat-label>
+                <input matInput [value]="u.email" disabled />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Частота розсилки</mat-label>
+                <mat-select [(ngModel)]="u.reportFrequency">
+                  <mat-option value="Daily">Щодня</mat-option>
+                  <mat-option value="Weekly">Щотижня</mat-option>
+                  <mat-option value="Monthly">Щомісяця</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <button mat-raised-button color="primary" (click)="saveProfile()">
+              <mat-icon>save</mat-icon> Зберегти
+            </button>
+          }
         </div>
-        <button mat-raised-button color="primary" (click)="saveProfile()">
-          <mat-icon>save</mat-icon> Зберегти
-        </button>
-      }
-    </section>
+      </mat-tab>
 
-    <!-- ── Безпека / 2FA ── -->
-    <section class="card">
-      <h2><mat-icon>security</mat-icon> Двофакторна автентифікація</h2>
-      <mat-divider />
-
-      @if (twoFactorEnabled()) {
-        <div class="twofa-status enabled">
-          <mat-icon>verified_user</mat-icon>
-          <div>
-            <strong>2FA увімкнена</strong>
-            <p>Ваш акаунт захищено застосунком-автентифікатором.</p>
-          </div>
+      <!-- ══ Безпека ══════════════════════════════════════════════════════ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>security</mat-icon>&nbsp;Безпека
+        </ng-template>
+        <div class="tab-content">
+          @if (twoFactorEnabled()) {
+            <div class="twofa-status enabled">
+              <mat-icon>verified_user</mat-icon>
+              <div><strong>2FA увімкнена</strong><p>Акаунт захищено автентифікатором.</p></div>
+            </div>
+            <button mat-stroked-button color="warn" (click)="disableTwoFactor()">
+              <mat-icon>no_encryption</mat-icon> Вимкнути 2FA
+            </button>
+          } @else if (qrUri()) {
+            <p class="hint">Відскануйте QR у Google/Microsoft Authenticator:</p>
+            <div class="qr-wrap"><qrcode [qrdata]="qrUri()" [width]="200" errorCorrectionLevel="M" /></div>
+            <p class="hint">Введіть 6-значний код:</p>
+            <div class="twofa-confirm-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Код підтвердження</mat-label>
+                <input matInput [(ngModel)]="twoFaCode" maxlength="6" placeholder="000000" />
+              </mat-form-field>
+              <button mat-raised-button color="primary"
+                      [disabled]="twoFaCode.length !== 6 || twoFaLoading()"
+                      (click)="confirmTwoFactor()">
+                @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
+                @else { Підтвердити }
+              </button>
+            </div>
+          } @else {
+            <div class="twofa-status disabled">
+              <mat-icon>lock_open</mat-icon>
+              <div><strong>2FA вимкнена</strong><p>Увімкніть для захисту акаунту.</p></div>
+            </div>
+            <button mat-raised-button color="accent" [disabled]="twoFaLoading()" (click)="setupTwoFactor()">
+              @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
+              @else { <ng-container><mat-icon>qr_code_2</mat-icon> Налаштувати 2FA</ng-container> }
+            </button>
+          }
         </div>
-        <button mat-stroked-button color="warn" (click)="disableTwoFactor()">
-          <mat-icon>no_encryption</mat-icon> Вимкнути 2FA
-        </button>
+      </mat-tab>
 
-      } @else if (qrUri()) {
-        <!-- Крок 2: відскануй QR та введи код -->
-        <p class="hint">Відскануйте QR-код у застосунку Google Authenticator або Microsoft Authenticator:</p>
-        <div class="qr-wrap">
-          <qrcode [qrdata]="qrUri()" [width]="200" errorCorrectionLevel="M" />
-        </div>
-        <p class="hint">Після сканування введіть 6-значний код для підтвердження:</p>
-        <div class="twofa-confirm-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Код підтвердження</mat-label>
-            <input matInput [(ngModel)]="twoFaCode" maxlength="6" placeholder="000000" />
-          </mat-form-field>
-          <button mat-raised-button color="primary"
-                  [disabled]="twoFaCode.length !== 6 || twoFaLoading()"
-                  (click)="confirmTwoFactor()">
-            @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
-            @else { Підтвердити }
-          </button>
-        </div>
-
-      } @else {
-        <!-- Крок 1: запустити налаштування -->
-        <div class="twofa-status disabled">
-          <mat-icon>lock_open</mat-icon>
-          <div>
-            <strong>2FA вимкнена</strong>
-            <p>Увімкніть для додаткового захисту акаунту.</p>
-          </div>
-        </div>
-        <button mat-raised-button color="accent"
-                [disabled]="twoFaLoading()"
-                (click)="setupTwoFactor()">
-          @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
-          @else { <ng-container><mat-icon>qr_code_2</mat-icon> Налаштувати 2FA</ng-container> }
-        </button>
-      }
-    </section>
-
-    <!-- ── Підписки ── -->
-    <section class="card">
-      <h2><mat-icon>tune</mat-icon> Мої підписки</h2>
-      <p class="hint">Обрані фільтри формують вашу персоналізовану стрічку.</p>
-      <mat-divider />
-
-      @for (group of allGroups(); track group.type) {
-        <div class="filter-group">
-          <p class="group-label">{{ group.label }}</p>
-          <mat-chip-set>
-            @for (filter of group.filters; track filter.id) {
-              <mat-chip [class.subscribed]="isSubscribed(filter.id)"
-                        (click)="toggleFilter(filter)">
-                @if (isSubscribed(filter.id)) {
-                  <mat-icon matChipLeading>check</mat-icon>
+      <!-- ══ Підписки ══════════════════════════════════════════════════════ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>tune</mat-icon>&nbsp;Підписки
+        </ng-template>
+        <div class="tab-content">
+          <p class="hint">Обрані фільтри формують стрічку та email-дайджест.</p>
+          @for (group of allGroups(); track group.type) {
+            <div class="filter-group">
+              <p class="group-label">{{ group.label }}</p>
+              <mat-chip-set>
+                @for (filter of group.filters; track filter.id) {
+                  <mat-chip [class.subscribed]="isSubscribed(filter.id)" (click)="toggleFilter(filter)">
+                    @if (isSubscribed(filter.id)) { <mat-icon matChipLeading>check</mat-icon> }
+                    {{ filter.name }}
+                  </mat-chip>
                 }
-                {{ filter.name }}
-              </mat-chip>
-            }
-          </mat-chip-set>
+              </mat-chip-set>
+            </div>
+          }
         </div>
-      }
-    </section>
+      </mat-tab>
 
+      <!-- ══ Збережені ═════════════════════════════════════════════════════ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>bookmark</mat-icon>&nbsp;Збережені
+        </ng-template>
+        <div class="tab-content">
+          @if (savedEvents().length === 0) {
+            <div class="empty-state">
+              <mat-icon>bookmark_border</mat-icon>
+              <p>Ще немає збережених подій.<br/>Натисніть ★ на картці у стрічці.</p>
+              <a mat-stroked-button routerLink="/">До стрічки</a>
+            </div>
+          } @else {
+            <div class="event-list">
+              @for (ev of savedEvents(); track ev.id) {
+                <a class="event-list-item" [href]="ev.sourceUrl" target="_blank" rel="noopener">
+                  @if (ev.imageUrl) {
+                    <img [src]="ev.imageUrl" [alt]="ev.title" class="event-thumb" />
+                  } @else {
+                    <div class="event-thumb placeholder"><mat-icon>event</mat-icon></div>
+                  }
+                  <div class="event-info">
+                    <p class="event-title">{{ ev.title }}</p>
+                    <p class="event-meta">
+                      {{ ev.publishedDate | date:'d MMM yyyy' }}
+                      @if (ev.source) { · {{ ev.source.name }} }
+                      @if (ev.location) { · 📍 {{ ev.location }} }
+                    </p>
+                  </div>
+                  <mat-icon class="link-icon">open_in_new</mat-icon>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- ══ Календар ══════════════════════════════════════════════════════ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>calendar_month</mat-icon>&nbsp;Календар
+        </ng-template>
+        <div class="tab-content calendar-tab">
+          @if (calendarEvents().length === 0) {
+            <div class="empty-state">
+              <mat-icon>calendar_today</mat-icon>
+              <p>Немає подій у календарі.<br/>Натисніть 📅 на картці у стрічці.</p>
+              <a mat-stroked-button routerLink="/">До стрічки</a>
+            </div>
+          } @else {
+            <div class="calendar-layout">
+              <mat-calendar
+                [dateClass]="dateClass"
+                [selected]="selectedDate()"
+                (selectedChange)="onDateSelected($event)"
+              />
+
+              <div class="calendar-events-panel">
+                @if (selectedDate()) {
+                  <h3>
+                    <mat-icon>event</mat-icon>
+                    {{ selectedDate() | date:'d MMMM yyyy' : '' : 'uk' }}
+                    <button mat-icon-button (click)="onDateSelected(null)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </h3>
+                } @else {
+                  <h3><mat-icon>event_note</mat-icon> Усі заплановані події</h3>
+                }
+
+                @if (eventsForDate().length === 0) {
+                  <p class="hint">На цю дату подій немає</p>
+                } @else {
+                  <div class="event-list">
+                    @for (ev of eventsForDate(); track ev.id) {
+                      <a class="event-list-item" [href]="ev.sourceUrl" target="_blank" rel="noopener">
+                        <div class="date-badge">
+                          <span class="day">{{ (ev.eventDate ?? ev.publishedDate) | date:'d' }}</span>
+                          <span class="mon">{{ (ev.eventDate ?? ev.publishedDate) | date:'MMM' : '' : 'uk' }}</span>
+                        </div>
+                        <div class="event-info">
+                          <p class="event-title">{{ ev.title }}</p>
+                          <p class="event-meta">
+                            @if (ev.location) { 📍 {{ ev.location }} · }{{ ev.source?.name }}
+                          </p>
+                        </div>
+                        <mat-icon class="link-icon">open_in_new</mat-icon>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
   </div>
 }

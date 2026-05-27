@@ -169,6 +169,49 @@ public class UsersController : ControllerBase
         return Ok(new { total, page, pageSize, events });
     }
 
+    // ── Збережені / Календар ────────────────────────────────────────────────
+
+    /// <summary>Події, позначені як цікаві</summary>
+    [HttpGet("{id:int}/saved-events")]
+    public async Task<IActionResult> GetSavedEvents(int id)
+    {
+        var events = await _db.UserEventStatuses
+            .Where(s => s.UserId == id && s.Status == "Interesting")
+            .Include(s => s.Event).ThenInclude(e => e.FeedSource)
+            .OrderByDescending(s => s.MarkedAt)
+            .Select(s => new
+            {
+                s.Event.Id, s.Event.Title, s.Event.Description, s.Event.SourceUrl,
+                s.Event.ImageUrl, s.Event.PublishedDate, s.Event.EventDate,
+                s.Event.Location, s.Event.Category, s.Event.Author,
+                Source = s.Event.FeedSource == null ? null
+                    : new { s.Event.FeedSource.Name, s.Event.FeedSource.Language },
+                s.MarkedAt,
+            })
+            .ToListAsync();
+        return Ok(events);
+    }
+
+    /// <summary>Події, додані до календаря</summary>
+    [HttpGet("{id:int}/calendar-events")]
+    public async Task<IActionResult> GetCalendarEvents(int id)
+    {
+        var events = await _db.UserEventStatuses
+            .Where(s => s.UserId == id && s.IsInCalendar)
+            .Include(s => s.Event).ThenInclude(e => e.FeedSource)
+            .OrderBy(s => s.Event.EventDate ?? s.Event.PublishedDate)
+            .Select(s => new
+            {
+                s.Event.Id, s.Event.Title, s.Event.Description, s.Event.SourceUrl,
+                s.Event.ImageUrl, s.Event.PublishedDate, s.Event.EventDate,
+                s.Event.Location, s.Event.Category, s.Event.Author,
+                Source = s.Event.FeedSource == null ? null
+                    : new { s.Event.FeedSource.Name, s.Event.FeedSource.Language },
+            })
+            .ToListAsync();
+        return Ok(events);
+    }
+
     // ── Статус події ─────────────────────────────────────────────────────────
 
     /// <summary>Позначити подію як "цікаво" або "до календаря"</summary>

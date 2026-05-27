@@ -1,4 +1,4 @@
-export type FilterType = 'Artist' | 'EventType' | 'City' | 'Technology';
+export type FilterType = 'EventType';
 
 export interface Filter {
   id: number;

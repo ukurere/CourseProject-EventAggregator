@@ -5,10 +5,7 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 const TYPE_LABELS: Record<FilterType, string> = {
-  Artist: 'Виконавці',
   EventType: 'Типи подій',
-  City: 'Міста',
-  Technology: 'Технології',
 };
 
 @Injectable({ providedIn: 'root' })
@@ -21,10 +18,12 @@ export class FiltersService {
   }
 
   getGrouped() {
+    const allowed = new Set<string>(['EventType']);
     return this.getAll().pipe(
       map(filters => {
         const groups = new Map<FilterType, Filter[]>();
         for (const f of filters) {
+          if (!allowed.has(f.type)) continue;
           if (!groups.has(f.type)) groups.set(f.type, []);
           groups.get(f.type)!.push(f);
         }
