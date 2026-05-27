@@ -24,6 +24,9 @@ builder.Services.AddHttpClient<RssFeedService>(client =>
 });
 
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<DigestService>();
+builder.Services.AddHostedService<DigestBackgroundService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
