@@ -1,5 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +10,7 @@ import { EventItem } from '../../../core/models/event.model';
 @Component({
   selector: 'app-event-card',
   standalone: true,
-  imports: [DatePipe, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
+  imports: [DatePipe, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   templateUrl: './event-card.html',
   styleUrl: './event-card.scss',
 })
