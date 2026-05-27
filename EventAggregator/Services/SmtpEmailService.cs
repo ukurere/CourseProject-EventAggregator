@@ -35,6 +35,9 @@ public class SmtpEmailService : IEmailService
         message.Body = new TextPart("html") { Text = htmlBody };
 
         using var client = new SmtpClient();
+        // Обходимо SSL-перевірку (потрібно в деяких мережах з proxy/антивірусом)
+        client.CheckCertificateRevocation = false;
+        client.ServerCertificateValidationCallback = (_, _, _, _) => true;
         await client.ConnectAsync(
             host,
             int.Parse(_config["Smtp:Port"] ?? "587"),

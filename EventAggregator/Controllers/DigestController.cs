@@ -39,8 +39,15 @@ public class DigestController : ControllerBase
 
         if (user is null) return NotFound();
 
-        await _digestService.SendDigestAsync(user);
-        return Ok(new { message = $"Дайджест надіслано на {user.Email}" });
+        try
+        {
+            await _digestService.SendDigestAsync(user);
+            return Ok(new { message = $"Дайджест надіслано на {user.Email}" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     /// <summary>Переглянути HTML-дайджест у браузері без надсилання</summary>
