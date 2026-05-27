@@ -1,0 +1,44 @@
+<mat-card class="event-card">
+  @if (event().imageUrl) {
+    <img mat-card-image [src]="event().imageUrl" [alt]="event().title" />
+  }
+
+  <mat-card-header>
+    <mat-card-title>{{ event().title }}</mat-card-title>
+    <mat-card-subtitle>
+      <span class="meta">
+        @if (event().source) {
+          <span class="source">{{ event().source!.name }}</span>
+          <span class="dot">·</span>
+        }
+        <span class="date">{{ event().publishedDate | date:'d MMM yyyy' }}</span>
+        @if (event().location) {
+          <span class="dot">·</span>
+          <mat-icon inline>place</mat-icon>
+          <span>{{ event().location }}</span>
+        }
+      </span>
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p class="description">{{ event().description }}</p>
+    @if (event().category) {
+      <mat-chip-set>
+        <mat-chip>{{ event().category }}</mat-chip>
+      </mat-chip-set>
+    }
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button mat-button color="primary" (click)="markInteresting.emit(event())">
+      <mat-icon>star_border</mat-icon> Цікаво
+    </button>
+    <button mat-button (click)="addToCalendar.emit(event())">
+      <mat-icon>event</mat-icon> До календаря
+    </button>
+    <a mat-button [href]="event().sourceUrl" target="_blank" rel="noopener">
+      <mat-icon>open_in_new</mat-icon> Джерело
+    </a>
+  </mat-card-actions>
+</mat-card>

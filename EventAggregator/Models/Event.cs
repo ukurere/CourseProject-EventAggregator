@@ -20,5 +20,8 @@ public class Event
 
     public int? MaxPeople { get; set; }
 
+    public int? FeedSourceId { get; set; }
+    public FeedSource? FeedSource { get; set; }
+
     public ICollection<UserEventStatus> UserEventStatuses { get; set; } = new List<UserEventStatus>();
 }

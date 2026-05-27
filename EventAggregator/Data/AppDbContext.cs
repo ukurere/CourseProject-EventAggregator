@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Filter> Filters => Set<Filter>();
     public DbSet<UserFilter> UserFilters => Set<UserFilter>();
     public DbSet<UserEventStatus> UserEventStatuses => Set<UserEventStatus>();
+    public DbSet<FeedSource> FeedSources => Set<FeedSource>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,5 +28,11 @@ public class AppDbContext : DbContext
             .HasOne(ues => ues.Event)
             .WithMany(e => e.UserEventStatuses)
             .HasForeignKey(ues => ues.EventId);
+
+        modelBuilder.Entity<Event>()
+            .HasOne(e => e.FeedSource)
+            .WithMany(fs => fs.Events)
+            .HasForeignKey(e => e.FeedSourceId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

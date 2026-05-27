@@ -1,0 +1,49 @@
+.event-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  img[mat-card-image] {
+    height: 180px;
+    object-fit: cover;
+  }
+
+  mat-card-content {
+    flex: 1;
+
+    .description {
+      font-size: 0.875rem;
+      color: #555;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+  }
+
+  mat-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px;
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.8rem;
+
+  .source { font-weight: 500; }
+  .dot    { color: #aaa; }
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    vertical-align: middle;
+  }
+}

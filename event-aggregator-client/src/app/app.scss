@@ -1,0 +1,21 @@
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 8px;
+
+  mat-icon { margin-right: 4px; }
+
+  .app-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .spacer { flex: 1; }
+
+  a.nav-active {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+  }
+}

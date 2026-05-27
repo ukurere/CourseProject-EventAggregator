@@ -1,0 +1,73 @@
+@if (loading()) {
+  <div class="spinner-wrap"><mat-spinner /></div>
+}
+
+@if (!loading()) {
+  <div class="profile-wrap">
+
+    <!-- ── Налаштування профілю ── -->
+    <section class="card">
+      <h2><mat-icon>person</mat-icon> Профіль</h2>
+      <mat-divider />
+
+      @if (user(); as u) {
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Ім'я</mat-label>
+            <input matInput [(ngModel)]="u.firstName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Прізвище</mat-label>
+            <input matInput [(ngModel)]="u.lastName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput [value]="u.email" disabled />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Частота розсилки</mat-label>
+            <mat-select [(ngModel)]="u.reportFrequency">
+              <mat-option value="Daily">Щодня</mat-option>
+              <mat-option value="Weekly">Щотижня</mat-option>
+              <mat-option value="Monthly">Щомісяця</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="saveProfile()">
+          <mat-icon>save</mat-icon> Зберегти
+        </button>
+      }
+    </section>
+
+    <!-- ── Підписки на фільтри ── -->
+    <section class="card">
+      <h2><mat-icon>tune</mat-icon> Мої підписки</h2>
+      <p class="hint">Обрані фільтри формують вашу персоналізовану стрічку.</p>
+      <mat-divider />
+
+      @for (group of allGroups(); track group.type) {
+        <div class="filter-group">
+          <p class="group-label">{{ group.label }}</p>
+          <mat-chip-set>
+            @for (filter of group.filters; track filter.id) {
+              <mat-chip
+                [class.subscribed]="isSubscribed(filter.id)"
+                (click)="toggleFilter(filter)"
+              >
+                @if (isSubscribed(filter.id)) {
+                  <mat-icon matChipLeading>check</mat-icon>
+                }
+                {{ filter.name }}
+              </mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+      }
+    </section>
+
+  </div>
+}

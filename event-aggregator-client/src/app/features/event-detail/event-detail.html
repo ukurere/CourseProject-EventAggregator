@@ -1,0 +1,62 @@
+@if (loading()) {
+  <div class="spinner-wrap"><mat-spinner /></div>
+}
+
+@if (!loading() && !event()) {
+  <div class="not-found">
+    <mat-icon>search_off</mat-icon>
+    <p>Подію не знайдено</p>
+    <a mat-button routerLink="/">← Повернутись до стрічки</a>
+  </div>
+}
+
+@if (event(); as e) {
+  <article class="detail-wrap">
+    <a mat-button routerLink="/" class="back-btn">
+      <mat-icon>arrow_back</mat-icon> Стрічка
+    </a>
+
+    @if (e.imageUrl) {
+      <img class="hero-img" [src]="e.imageUrl" [alt]="e.title" />
+    }
+
+    <h1 class="title">{{ e.title }}</h1>
+
+    <div class="meta">
+      @if (e.source) {
+        <span class="chip source">{{ e.source.name }}</span>
+      }
+      @if (e.category) {
+        <mat-chip>{{ e.category }}</mat-chip>
+      }
+      <span class="date">
+        <mat-icon inline>calendar_today</mat-icon>
+        {{ e.publishedDate | date:'d MMMM yyyy, HH:mm' }}
+      </span>
+      @if (e.location) {
+        <span class="location">
+          <mat-icon inline>place</mat-icon> {{ e.location }}
+        </span>
+      }
+      @if (e.author) {
+        <span><mat-icon inline>person</mat-icon> {{ e.author }}</span>
+      }
+    </div>
+
+    <mat-divider />
+
+    <p class="body-text">{{ e.description }}</p>
+
+    <div class="actions">
+      <a mat-raised-button color="primary" [href]="e.sourceUrl" target="_blank" rel="noopener">
+        <mat-icon>open_in_new</mat-icon> Відкрити оригінал
+      </a>
+      <button mat-stroked-button>
+        <mat-icon>star_border</mat-icon> Цікаво
+      </button>
+      <button mat-stroked-button>
+        <mat-icon>event</mat-icon> До календаря
+      </button>
+    </div>
+  </article>
+}

@@ -1,0 +1,97 @@
+<mat-sidenav-container class="feed-container">
+
+  <!-- ── Бокова панель фільтрів ── -->
+  <mat-sidenav mode="side" opened class="filter-sidenav">
+    <div class="filter-header">
+      <mat-icon>tune</mat-icon>
+      <span>Фільтри</span>
+    </div>
+
+    <mat-divider />
+
+    <div class="filter-section">
+      <p class="filter-label">Мова</p>
+      <button mat-stroked-button [class.active]="selectedLanguage === 'uk'"
+              (click)="filterByLanguage('uk')">🇺🇦 Українська</button>
+      <button mat-stroked-button [class.active]="selectedLanguage === 'en'"
+              (click)="filterByLanguage('en')">🇬🇧 English</button>
+    </div>
+
+    <mat-divider />
+
+    <div class="filter-section">
+      <p class="filter-label">Категорія</p>
+      <button mat-stroked-button [class.active]="selectedCategory === 'events'"
+              (click)="filterByCategory('events')">📅 Події</button>
+      <button mat-stroked-button [class.active]="selectedCategory === 'news'"
+              (click)="filterByCategory('news')">📰 Новини</button>
+      <button mat-stroked-button [class.active]="selectedCategory === 'tech'"
+              (click)="filterByCategory('tech')">💻 IT/Tech</button>
+      <button mat-stroked-button [class.active]="selectedCategory === 'science'"
+              (click)="filterByCategory('science')">🔬 Наука</button>
+    </div>
+
+    <mat-divider />
+
+    @for (group of filterGroups(); track group.type) {
+      <div class="filter-section">
+        <p class="filter-label">{{ group.label }}</p>
+        @for (filter of group.filters; track filter.id) {
+          <mat-checkbox (change)="onSearch()">{{ filter.name }}</mat-checkbox>
+        }
+      </div>
+      <mat-divider />
+    }
+  </mat-sidenav>
+
+  <!-- ── Основний контент ── -->
+  <mat-sidenav-content class="feed-content">
+
+    <!-- Пошук -->
+    <div class="search-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Пошук подій</mat-label>
+        <input matInput [(ngModel)]="search" (keyup.enter)="onSearch()" />
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <!-- Спінер -->
+    @if (loading()) {
+      <div class="spinner-wrap">
+        <mat-spinner diameter="48" />
+      </div>
+    }
+
+    <!-- Результати -->
+    @if (!loading()) {
+      @if (events().length === 0) {
+        <div class="empty-state">
+          <mat-icon>inbox</mat-icon>
+          <p>Подій не знайдено. Спробуйте змінити фільтри або оновити стрічки.</p>
+        </div>
+      } @else {
+        <div class="events-grid">
+          @for (event of events(); track event.id) {
+            <app-event-card
+              [event]="event"
+              (markInteresting)="onMarkInteresting($event)"
+              (addToCalendar)="onAddToCalendar($event)"
+            />
+          }
+        </div>
+
+        <mat-paginator
+          [length]="total()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        />
+      }
+    }
+
+  </mat-sidenav-content>
+</mat-sidenav-container>
