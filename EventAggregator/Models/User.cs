@@ -18,8 +18,11 @@ public class User
     public string? PhotoUrl { get; set; }
 
     public string ReportFrequency { get; set; } = "Weekly";
-
     public DateTime? LastReportSent { get; set; }
+
+    public string PasswordHash { get; set; } = string.Empty;
+    public bool TwoFactorEnabled { get; set; } = false;
+    public string? TwoFactorSecret { get; set; }
 
     public ICollection<UserFilter> UserFilters { get; set; } = new List<UserFilter>();
     public ICollection<UserEventStatus> UserEventStatuses { get; set; } = new List<UserEventStatus>();

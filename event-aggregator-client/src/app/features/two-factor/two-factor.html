@@ -1,0 +1,37 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <mat-icon>security</mat-icon>
+      <h1>Двофакторна автентифікація</h1>
+    </div>
+
+    <h2>Введіть 6-значний код з вашого застосунку-автентифікатора</h2>
+
+    @if (error()) {
+      <p class="error-msg">{{ error() }}</p>
+    }
+
+    <form (ngSubmit)="submit()">
+      <mat-form-field appearance="outline">
+        <mat-label>Код підтвердження</mat-label>
+        <input matInput [(ngModel)]="code" name="code"
+               maxlength="6" placeholder="000000"
+               autocomplete="one-time-code" required />
+        <mat-icon matSuffix>pin</mat-icon>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="loading() || code.length !== 6">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          Підтвердити
+        }
+      </button>
+    </form>
+
+    <p class="auth-link">
+      <a routerLink="/login">← Повернутись до входу</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,44 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <mat-icon>rss_feed</mat-icon>
+      <h1>EventAggregator</h1>
+    </div>
+
+    <h2>Вхід</h2>
+
+    @if (error()) {
+      <p class="error-msg">{{ error() }}</p>
+    }
+
+    <form (ngSubmit)="submit()" #f="ngForm">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="email" name="email" required />
+        <mat-icon matSuffix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Пароль</mat-label>
+        <input matInput [type]="hidePass ? 'password' : 'text'"
+               [(ngModel)]="password" name="password" required />
+        <button mat-icon-button matSuffix type="button" (click)="hidePass = !hidePass">
+          <mat-icon>{{ hidePass ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="loading() || !email || !password">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          Увійти
+        }
+      </button>
+    </form>
+
+    <p class="auth-link">
+      Немає акаунту? <a routerLink="/register">Зареєструватися</a>
+    </p>
+  </div>
+</div>

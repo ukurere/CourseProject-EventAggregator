@@ -1,0 +1,9 @@
+@use '../../features/login/login.scss';
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+
+  mat-form-field { width: 100%; }
+}

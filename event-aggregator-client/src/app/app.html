@@ -1,15 +1,21 @@
-<mat-toolbar color="primary" class="app-toolbar">
-  <mat-icon>rss_feed</mat-icon>
-  <span class="app-title">EventAggregator</span>
+@if (auth.isLoggedIn) {
+  <mat-toolbar color="primary" class="app-toolbar">
+    <mat-icon>rss_feed</mat-icon>
+    <span class="app-title">EventAggregator</span>
 
-  <span class="spacer"></span>
+    <span class="spacer"></span>
 
-  <a mat-button routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}">
-    <mat-icon>home</mat-icon> Стрічка
-  </a>
-  <a mat-button routerLink="/profile" routerLinkActive="nav-active">
-    <mat-icon>person</mat-icon> Профіль
-  </a>
-</mat-toolbar>
+    <a mat-button routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}">
+      <mat-icon>home</mat-icon> Стрічка
+    </a>
+    <a mat-button routerLink="/profile" routerLinkActive="nav-active">
+      <mat-icon>person</mat-icon>
+      {{ auth.currentUser()?.firstName }}
+    </a>
+    <button mat-icon-button (click)="auth.logout()" matTooltip="Вийти">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </mat-toolbar>
+}
 
 <router-outlet />

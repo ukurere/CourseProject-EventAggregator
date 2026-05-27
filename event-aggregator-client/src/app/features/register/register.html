@@ -1,0 +1,57 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <mat-icon>rss_feed</mat-icon>
+      <h1>EventAggregator</h1>
+    </div>
+
+    <h2>Реєстрація</h2>
+
+    @if (error()) {
+      <p class="error-msg">{{ error() }}</p>
+    }
+
+    <form (ngSubmit)="submit()">
+      <div class="name-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Ім'я</mat-label>
+          <input matInput [(ngModel)]="firstName" name="firstName" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Прізвище</mat-label>
+          <input matInput [(ngModel)]="lastName" name="lastName" required />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="email" name="email" required />
+        <mat-icon matSuffix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Пароль</mat-label>
+        <input matInput [type]="hidePass ? 'password' : 'text'"
+               [(ngModel)]="password" name="password" required minlength="6" />
+        <button mat-icon-button matSuffix type="button" (click)="hidePass = !hidePass">
+          <mat-icon>{{ hidePass ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-hint>Мінімум 6 символів</mat-hint>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="loading() || !firstName || !lastName || !email || password.length < 6">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          Створити акаунт
+        }
+      </button>
+    </form>
+
+    <p class="auth-link">
+      Вже є акаунт? <a routerLink="/login">Увійти</a>
+    </p>
+  </div>
+</div>

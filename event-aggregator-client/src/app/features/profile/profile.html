@@ -5,7 +5,7 @@
 @if (!loading()) {
   <div class="profile-wrap">
 
-    <!-- ── Налаштування профілю ── -->
+    <!-- ── Профіль ── -->
     <section class="card">
       <h2><mat-icon>person</mat-icon> Профіль</h2>
       <mat-divider />
@@ -36,14 +36,68 @@
             </mat-select>
           </mat-form-field>
         </div>
-
         <button mat-raised-button color="primary" (click)="saveProfile()">
           <mat-icon>save</mat-icon> Зберегти
         </button>
       }
     </section>
 
-    <!-- ── Підписки на фільтри ── -->
+    <!-- ── Безпека / 2FA ── -->
+    <section class="card">
+      <h2><mat-icon>security</mat-icon> Двофакторна автентифікація</h2>
+      <mat-divider />
+
+      @if (twoFactorEnabled()) {
+        <div class="twofa-status enabled">
+          <mat-icon>verified_user</mat-icon>
+          <div>
+            <strong>2FA увімкнена</strong>
+            <p>Ваш акаунт захищено застосунком-автентифікатором.</p>
+          </div>
+        </div>
+        <button mat-stroked-button color="warn" (click)="disableTwoFactor()">
+          <mat-icon>no_encryption</mat-icon> Вимкнути 2FA
+        </button>
+
+      } @else if (qrUri()) {
+        <!-- Крок 2: відскануй QR та введи код -->
+        <p class="hint">Відскануйте QR-код у застосунку Google Authenticator або Microsoft Authenticator:</p>
+        <div class="qr-wrap">
+          <qrcode [qrdata]="qrUri()" [width]="200" errorCorrectionLevel="M" />
+        </div>
+        <p class="hint">Після сканування введіть 6-значний код для підтвердження:</p>
+        <div class="twofa-confirm-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Код підтвердження</mat-label>
+            <input matInput [(ngModel)]="twoFaCode" maxlength="6" placeholder="000000" />
+          </mat-form-field>
+          <button mat-raised-button color="primary"
+                  [disabled]="twoFaCode.length !== 6 || twoFaLoading()"
+                  (click)="confirmTwoFactor()">
+            @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
+            @else { Підтвердити }
+          </button>
+        </div>
+
+      } @else {
+        <!-- Крок 1: запустити налаштування -->
+        <div class="twofa-status disabled">
+          <mat-icon>lock_open</mat-icon>
+          <div>
+            <strong>2FA вимкнена</strong>
+            <p>Увімкніть для додаткового захисту акаунту.</p>
+          </div>
+        </div>
+        <button mat-raised-button color="accent"
+                [disabled]="twoFaLoading()"
+                (click)="setupTwoFactor()">
+          @if (twoFaLoading()) { <mat-spinner diameter="20" /> }
+          @else { <ng-container><mat-icon>qr_code_2</mat-icon> Налаштувати 2FA</ng-container> }
+        </button>
+      }
+    </section>
+
+    <!-- ── Підписки ── -->
     <section class="card">
       <h2><mat-icon>tune</mat-icon> Мої підписки</h2>
       <p class="hint">Обрані фільтри формують вашу персоналізовану стрічку.</p>
@@ -54,10 +108,8 @@
           <p class="group-label">{{ group.label }}</p>
           <mat-chip-set>
             @for (filter of group.filters; track filter.id) {
-              <mat-chip
-                [class.subscribed]="isSubscribed(filter.id)"
-                (click)="toggleFilter(filter)"
-              >
+              <mat-chip [class.subscribed]="isSubscribed(filter.id)"
+                        (click)="toggleFilter(filter)">
                 @if (isSubscribed(filter.id)) {
                   <mat-icon matChipLeading>check</mat-icon>
                 }
