@@ -34,28 +34,39 @@ import { EventCard } from '../../shared/components/event-card/event-card';
   styleUrl: './feed.scss',
 })
 export class Feed implements OnInit {
-  private auth         = inject(AuthService);
+  private auth          = inject(AuthService);
   private eventsService = inject(EventsService);
   private filtersService = inject(FiltersService);
   private usersService  = inject(UsersService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar      = inject(MatSnackBar);
 
   get userId() { return this.auth.currentUser()?.id ?? 0; }
 
-  events = signal<EventItem[]>([]);
+  events       = signal<EventItem[]>([]);
   filterGroups = signal<FilterGroup[]>([]);
-  loading = signal(false);
-  total = signal(0);
+  loading      = signal(false);
+  total        = signal(0);
 
-  search = '';
+  savedIds    = signal<Set<number>>(new Set());
+  calendarIds = signal<Set<number>>(new Set());
+
+  search           = '';
   selectedCategory = '';
   selectedLanguage = '';
-  page = 1;
+  page     = 1;
   pageSize = 20;
 
   ngOnInit() {
     this.loadFilters();
     this.loadEvents();
+    this.loadStatuses();
+  }
+
+  loadStatuses() {
+    this.usersService.getSavedEvents(this.userId)
+      .subscribe(evs => this.savedIds.set(new Set(evs.map(e => e.id))));
+    this.usersService.getCalendarEvents(this.userId)
+      .subscribe(evs => this.calendarIds.set(new Set(evs.map(e => e.id))));
   }
 
   loadFilters() {
@@ -83,10 +94,7 @@ export class Feed implements OnInit {
     });
   }
 
-  onSearch() {
-    this.page = 1;
-    this.loadEvents();
-  }
+  onSearch() { this.page = 1; this.loadEvents(); }
 
   onPageChange(e: PageEvent) {
     this.page = e.pageIndex + 1;
@@ -106,13 +114,40 @@ export class Feed implements OnInit {
     this.loadEvents();
   }
 
+  // ── Toggle збережено ──────────────────────────────────────────────────────
+
   onMarkInteresting(event: EventItem) {
-    this.usersService.setEventStatus(this.userId, event.id, { status: 'Interesting', isInCalendar: false })
-      .subscribe(() => this.snackBar.open(`«${event.title}» збережено ★`, '', { duration: 2000 }));
+    if (this.savedIds().has(event.id)) {
+      // Вже збережено → прибрати
+      this.usersService.removeEventStatus(this.userId, event.id).subscribe(() => {
+        this.savedIds.update(s => { const n = new Set(s); n.delete(event.id); return n; });
+        this.snackBar.open(`«${event.title}» прибрано зі збережених`, '', { duration: 2000 });
+      });
+    } else {
+      this.usersService.setEventStatus(this.userId, event.id, { status: 'Interesting', isInCalendar: false })
+        .subscribe(() => {
+          this.savedIds.update(s => new Set([...s, event.id]));
+          this.snackBar.open(`«${event.title}» збережено ★`, '', { duration: 2000 });
+        });
+    }
   }
 
+  // ── Toggle календар ───────────────────────────────────────────────────────
+
   onAddToCalendar(event: EventItem) {
-    this.usersService.setEventStatus(this.userId, event.id, { isInCalendar: true })
-      .subscribe(() => this.snackBar.open(`«${event.title}» додано до календаря 📅`, '', { duration: 2000 }));
+    if (this.calendarIds().has(event.id)) {
+      // Вже в календарі → прибрати
+      this.usersService.setEventStatus(this.userId, event.id, { isInCalendar: false })
+        .subscribe(() => {
+          this.calendarIds.update(s => { const n = new Set(s); n.delete(event.id); return n; });
+          this.snackBar.open(`«${event.title}» прибрано з календаря`, '', { duration: 2000 });
+        });
+    } else {
+      this.usersService.setEventStatus(this.userId, event.id, { isInCalendar: true })
+        .subscribe(() => {
+          this.calendarIds.update(s => new Set([...s, event.id]));
+          this.snackBar.open(`«${event.title}» додано до календаря 📅`, '', { duration: 2000 });
+        });
+    }
   }
 }

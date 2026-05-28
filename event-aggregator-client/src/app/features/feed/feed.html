@@ -77,6 +77,8 @@
           @for (event of events(); track event.id) {
             <app-event-card
               [event]="event"
+              [saved]="savedIds().has(event.id)"
+              [inCalendar]="calendarIds().has(event.id)"
               (markInteresting)="onMarkInteresting($event)"
               (addToCalendar)="onAddToCalendar($event)"
             />

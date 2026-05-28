@@ -42,6 +42,16 @@
     flex-wrap: wrap;
     gap: 4px;
     padding: 8px;
+
+    .btn-saved {
+      color: #f59e0b;
+      mat-icon { color: #f59e0b; }
+    }
+
+    .btn-calendar {
+      color: #1a73e8;
+      mat-icon { color: #1a73e8; }
+    }
   }
 }
 

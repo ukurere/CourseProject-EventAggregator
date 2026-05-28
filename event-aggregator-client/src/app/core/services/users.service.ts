@@ -52,4 +52,8 @@ export class UsersService {
   getCalendarEvents(userId: number) {
     return this.http.get<EventItem[]>(`${this.base}/${userId}/calendar-events`);
   }
+
+  removeEventStatus(userId: number, eventId: number) {
+    return this.http.delete(`${this.base}/${userId}/events/${eventId}/status`);
+  }
 }

@@ -15,7 +15,9 @@ import { EventItem } from '../../../core/models/event.model';
   styleUrl: './event-card.scss',
 })
 export class EventCard {
-  event = input.required<EventItem>();
+  event        = input.required<EventItem>();
+  saved        = input<boolean>(false);
+  inCalendar   = input<boolean>(false);
   markInteresting = output<EventItem>();
-  addToCalendar = output<EventItem>();
+  addToCalendar   = output<EventItem>();
 }

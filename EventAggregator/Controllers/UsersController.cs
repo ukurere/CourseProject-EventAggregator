@@ -243,6 +243,20 @@ public class UsersController : ControllerBase
         return Ok(new { message = "Статус оновлено" });
     }
 
+    /// <summary>Прибрати статус події (скасувати збереження/календар)</summary>
+    [HttpDelete("{id:int}/events/{eventId:int}/status")]
+    public async Task<IActionResult> RemoveEventStatus(int id, int eventId)
+    {
+        var status = await _db.UserEventStatuses
+            .FirstOrDefaultAsync(s => s.UserId == id && s.EventId == eventId);
+
+        if (status is null) return NoContent();
+
+        _db.UserEventStatuses.Remove(status);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static object MapUser(User u, IEnumerable<Filter> filters) => new
