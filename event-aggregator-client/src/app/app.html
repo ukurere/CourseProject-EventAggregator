@@ -12,6 +12,9 @@
       <mat-icon>person</mat-icon>
       {{ auth.currentUser()?.firstName }}
     </a>
+    <a mat-icon-button routerLink="/admin" routerLinkActive="nav-active" matTooltip="Адмін">
+      <mat-icon>admin_panel_settings</mat-icon>
+    </a>
     <button mat-icon-button (click)="auth.logout()" matTooltip="Вийти">
       <mat-icon>logout</mat-icon>
     </button>
