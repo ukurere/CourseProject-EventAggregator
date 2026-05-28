@@ -38,6 +38,58 @@
             <button mat-raised-button color="primary" (click)="saveProfile()">
               <mat-icon>save</mat-icon> Зберегти
             </button>
+
+            <!-- ── Telegram-розсилка ── -->
+            <mat-divider class="section-divider" />
+            <div class="section-title">
+              <mat-icon class="tg-icon">send</mat-icon>
+              <span>Telegram-сповіщення</span>
+            </div>
+
+            <div class="telegram-block">
+              <mat-slide-toggle
+                [checked]="tgEnabled()"
+                (change)="tgEnabled.set($event.checked)">
+                Отримувати дайджести у Telegram
+              </mat-slide-toggle>
+
+              @if (tgEnabled()) {
+                <mat-form-field appearance="outline" class="tg-field">
+                  <mat-label>Telegram юзернейм</mat-label>
+                  <span matTextPrefix>@&nbsp;</span>
+                  <input matInput
+                         [ngModel]="tgUsername()"
+                         (ngModelChange)="tgUsername.set($event)"
+                         placeholder="your_username" />
+                  <mat-hint>Введіть юзернейм без @ і натисніть «Зберегти»</mat-hint>
+                </mat-form-field>
+
+                <!-- Статус підключення -->
+                @if (tgChatId()) {
+                  <div class="tg-status connected">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Бот підключено — ви будете отримувати дайджести в Telegram</span>
+                  </div>
+                } @else if (tgUsername()) {
+                  <div class="tg-status pending">
+                    <mat-icon>schedule</mat-icon>
+                    <span>
+                      Збережіть та напишіть команду&nbsp;<code>/start</code>&nbsp;нашому Telegram-боту,
+                      щоб підключити акаунт
+                    </span>
+                  </div>
+                }
+              }
+
+              <button mat-stroked-button
+                      [disabled]="tgSaving()"
+                      (click)="saveTelegram()"
+                      class="tg-save-btn">
+                @if (tgSaving()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>save</mat-icon> }
+                Зберегти Telegram
+              </button>
+            </div>
           }
         </div>
       </mat-tab>

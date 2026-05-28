@@ -259,6 +259,33 @@ public class UsersController : ControllerBase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    // ── Telegram ─────────────────────────────────────────────────────────────
+
+    /// <summary>Зберегти Telegram-налаштування користувача</summary>
+    [HttpPatch("{id:int}/telegram")]
+    public async Task<IActionResult> UpdateTelegram(int id, UpdateTelegramRequest req)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null) return NotFound();
+
+        // Strip leading @ if user typed it
+        var username = req.TelegramUsername?.Trim().TrimStart('@').ToLower();
+
+        // If username changed — reset chat link so user needs to /start again
+        if (user.TelegramUsername != username)
+        {
+            user.TelegramUsername = username;
+            user.TelegramChatId   = null;
+        }
+
+        user.TelegramNotificationsEnabled = req.TelegramNotificationsEnabled;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { user.TelegramChatId });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
     private static object MapUser(User u, IEnumerable<Filter> filters) => new
     {
         u.Id,
@@ -268,10 +295,14 @@ public class UsersController : ControllerBase
         u.PhotoUrl,
         u.ReportFrequency,
         u.LastReportSent,
+        u.TelegramNotificationsEnabled,
+        u.TelegramUsername,
+        u.TelegramChatId,
         Filters = filters.Select(f => new { f.Id, f.Name, f.Type })
     };
 }
 
 public record CreateUserRequest(string FirstName, string LastName, string Email, string? ReportFrequency);
 public record UpdateUserRequest(string? FirstName, string? LastName, string? PhotoUrl, string? ReportFrequency);
+public record UpdateTelegramRequest(bool TelegramNotificationsEnabled, string? TelegramUsername);
 public record SetEventStatusRequest(string? Status, bool IsInCalendar);

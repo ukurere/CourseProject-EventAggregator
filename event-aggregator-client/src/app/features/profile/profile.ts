@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -29,7 +30,7 @@ import { User } from '../../core/models/user.model';
     FormsModule, DatePipe, RouterLink, QRCodeComponent,
     MatButtonModule, MatIconModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatChipsModule,
-    MatDividerModule, MatProgressSpinnerModule, MatTabsModule,
+    MatDividerModule, MatSlideToggleModule, MatProgressSpinnerModule, MatTabsModule,
     MatDatepickerModule, MatNativeDateModule,
   ],
   templateUrl: './profile.html',
@@ -47,6 +48,12 @@ export class Profile implements OnInit {
   savedEvents    = signal<EventItem[]>([]);
   calendarEvents = signal<EventItem[]>([]);
   loading        = signal(true);
+
+  // Telegram
+  tgEnabled  = signal(false);
+  tgUsername = signal('');
+  tgChatId   = signal<number | null>(null);
+  tgSaving   = signal(false);
 
   // 2FA
   twoFactorEnabled = signal(false);
@@ -86,6 +93,9 @@ export class Profile implements OnInit {
       next: u => {
         this.user.set(u);
         this.userFilterIds.set(new Set(u.filters.map(f => f.id)));
+        this.tgEnabled.set(u.telegramNotificationsEnabled);
+        this.tgUsername.set(u.telegramUsername ?? '');
+        this.tgChatId.set(u.telegramChatId ?? null);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -121,6 +131,24 @@ export class Profile implements OnInit {
       lastName: u.lastName,
       reportFrequency: u.reportFrequency,
     }).subscribe(() => this.snackBar.open('Профіль збережено', '', { duration: 2000 }));
+  }
+
+  saveTelegram() {
+    this.tgSaving.set(true);
+    this.usersService.updateTelegram(this.userId, {
+      telegramNotificationsEnabled: this.tgEnabled(),
+      telegramUsername: this.tgUsername().trim().replace(/^@/, '') || undefined,
+    }).subscribe({
+      next: res => {
+        this.tgChatId.set(res.telegramChatId ?? null);
+        this.tgSaving.set(false);
+        this.snackBar.open('Telegram-налаштування збережено', '', { duration: 2500 });
+      },
+      error: () => {
+        this.tgSaving.set(false);
+        this.snackBar.open('Помилка збереження', 'ОК', { duration: 3000 });
+      },
+    });
   }
 
   onDateSelected(date: Date | null) {

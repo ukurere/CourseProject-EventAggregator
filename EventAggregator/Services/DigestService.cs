@@ -9,13 +9,16 @@ public class DigestService
 {
     private readonly AppDbContext _db;
     private readonly IEmailService _emailService;
+    private readonly ITelegramBotService _telegramService;
     private readonly ILogger<DigestService> _logger;
 
-    public DigestService(AppDbContext db, IEmailService emailService, ILogger<DigestService> logger)
+    public DigestService(AppDbContext db, IEmailService emailService,
+                         ITelegramBotService telegramService, ILogger<DigestService> logger)
     {
-        _db = db;
-        _emailService = emailService;
-        _logger = logger;
+        _db               = db;
+        _emailService     = emailService;
+        _telegramService  = telegramService;
+        _logger           = logger;
     }
 
     public async Task SendAllDueAsync()
@@ -65,10 +68,50 @@ public class DigestService
 
         await _emailService.SendAsync(user.Email, subject, html);
 
+        // Telegram
+        if (user.TelegramNotificationsEnabled && user.TelegramChatId.HasValue)
+        {
+            var tgText = BuildTelegramText(user, events);
+            await _telegramService.SendMessageAsync(user.TelegramChatId.Value, tgText);
+        }
+
         user.LastReportSent = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("Digest sent to {Email}: {Count} events", user.Email, events.Count);
+    }
+
+    /// <summary>Send digest only to Telegram (called by /digest bot command).</summary>
+    public async Task SendTelegramDigestAsync(User user)
+    {
+        if (!user.TelegramChatId.HasValue) return;
+
+        var from     = GetFromDate(user.ReportFrequency);
+        var keywords = user.UserFilters
+            .Select(uf => uf.Filter.SearchKeyword.ToLower())
+            .ToList();
+
+        var events = await _db.Events
+            .Include(e => e.FeedSource)
+            .Where(e => e.PublishedDate >= from)
+            .Where(e => keywords.Any(k =>
+                e.Title.ToLower().Contains(k) ||
+                e.Description.ToLower().Contains(k)))
+            .OrderByDescending(e => e.PublishedDate)
+            .Take(10)
+            .ToListAsync();
+
+        if (events.Count == 0)
+        {
+            await _telegramService.SendMessageAsync(user.TelegramChatId.Value,
+                "ℹ️ За вашими підписками поки що немає нових подій.");
+            return;
+        }
+
+        var tgText = BuildTelegramText(user, events);
+        await _telegramService.SendMessageAsync(user.TelegramChatId.Value, tgText);
+        _logger.LogInformation("Telegram digest sent to chatId={ChatId}: {Count} events",
+            user.TelegramChatId.Value, events.Count);
     }
 
     public async Task<string> BuildPreviewAsync(User user)
@@ -194,6 +237,42 @@ public class DigestService
 
         return sb.ToString();
     }
+
+    private static string BuildTelegramText(User user, List<Event> events)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine($"📅 <b>EventAggregator — {FrequencyLabel(user.ReportFrequency)} дайджест</b>");
+        sb.AppendLine();
+        sb.AppendLine($"Привіт, <b>{TgEscape(user.FirstName)}</b>! 👋");
+        sb.AppendLine("Ось підбірка свіжих подій за вашими підписками:");
+        sb.AppendLine();
+
+        for (int i = 0; i < events.Count; i++)
+        {
+            var ev     = events[i];
+            var source = TgEscape(ev.FeedSource?.Name ?? "Невідоме джерело");
+            var date   = ev.PublishedDate.ToString("dd.MM.yyyy");
+            var cat    = string.IsNullOrEmpty(ev.Category) ? "" : $" · {TgEscape(ev.Category)}";
+            var desc   = ev.Description.Length > 150
+                ? ev.Description[..150] + "…"
+                : ev.Description;
+
+            sb.AppendLine($"<b>{i + 1}. {TgEscape(ev.Title)}</b>");
+            sb.AppendLine($"📰 <i>{source} · {date}{cat}</i>");
+            sb.AppendLine(TgEscape(desc));
+            sb.AppendLine($"🔗 <a href=\"{TgEscape(ev.SourceUrl)}\">Читати далі</a>");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"<i>Частота розсилки: {FrequencyLabel(user.ReportFrequency)}</i>");
+
+        return sb.ToString().Trim();
+    }
+
+    /// <summary>Escapes characters that have special meaning in Telegram HTML mode.</summary>
+    private static string TgEscape(string s) =>
+        s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
     private static string Escape(string s) =>
         s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");

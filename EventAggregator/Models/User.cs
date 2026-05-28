@@ -24,6 +24,11 @@ public class User
     public bool TwoFactorEnabled { get; set; } = false;
     public string? TwoFactorSecret { get; set; }
 
+    // ── Telegram ──────────────────────────────────────────────────────────────
+    public bool   TelegramNotificationsEnabled { get; set; } = false;
+    public string? TelegramUsername { get; set; }   // введено в профілі (без @)
+    public long?   TelegramChatId   { get; set; }   // встановлюється після /start
+
     public ICollection<UserFilter> UserFilters { get; set; } = new List<UserFilter>();
     public ICollection<UserEventStatus> UserEventStatuses { get; set; } = new List<UserEventStatus>();
 }

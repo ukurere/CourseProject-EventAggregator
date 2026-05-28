@@ -4,6 +4,7 @@ using EventAggregator.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,19 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<DigestService>();
 builder.Services.AddHostedService<DigestBackgroundService>();
 builder.Services.AddHostedService<RssPollBackgroundService>();
+
+// ── Telegram Bot ──────────────────────────────────────────────────────────
+var telegramToken = builder.Configuration["Telegram:BotToken"];
+if (!string.IsNullOrWhiteSpace(telegramToken))
+{
+    builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(telegramToken));
+    builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+    builder.Services.AddHostedService<TelegramBotBackgroundService>();
+}
+else
+{
+    builder.Services.AddScoped<ITelegramBotService, NullTelegramBotService>();
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
