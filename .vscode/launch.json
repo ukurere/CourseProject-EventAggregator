@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+
+  "compounds": [
+    {
+      // Це те, що запускається по F5
+      "name": "🚀 Full Stack",
+      "configurations": ["Backend (.NET)", "Frontend (Chrome)"],
+      "stopAll": true,
+      "presentation": { "order": 1 }
+    }
+  ],
+
+  "configurations": [
+
+    // ── .NET бекенд з дебагером ────────────────────────────────────────────────
+    {
+      "name": "Backend (.NET)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: backend",
+      "program": "${workspaceFolder}/EventAggregator/bin/Debug/net9.0/EventAggregator.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/EventAggregator",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_WATCH_SUPPRESS_MSBUILD_INCREMENTALISM": "true"
+      },
+      "presentation": { "hidden": true }
+    },
+
+    // ── Angular у Chrome ───────────────────────────────────────────────────────
+    {
+      "name": "Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/event-aggregator-client/src",
+      "preLaunchTask": "serve: frontend",
+      "presentation": { "hidden": true }
+    }
+
+  ]
+}
