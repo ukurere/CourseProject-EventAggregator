@@ -1,0 +1,94 @@
+<div class="user-dialog">
+  <div mat-dialog-title class="dialog-header">
+    <div class="user-avatar">{{ initials }}</div>
+    <div class="user-title">
+      <h2>{{ data.firstName }} {{ data.lastName }}</h2>
+      <span class="user-email">{{ data.email }}</span>
+    </div>
+    <mat-chip [class]="data.isBanned ? 'chip-banned' : 'chip-active-user'">
+      {{ data.isBanned ? 'Заблоковано' : 'Активний' }}
+    </mat-chip>
+  </div>
+
+  <mat-dialog-content>
+    @if (loading()) {
+      <div class="dialog-spinner"><mat-spinner diameter="36" /></div>
+    }
+
+    @if (!loading() && detail(); as d) {
+      <div class="detail-stats">
+        <div class="dstat">
+          <mat-icon>filter_list</mat-icon>
+          <span class="dstat-val">{{ d.filters.length }}</span>
+          <span class="dstat-lbl">фільтрів</span>
+        </div>
+        <div class="dstat">
+          <mat-icon>star</mat-icon>
+          <span class="dstat-val">{{ d.savedCount }}</span>
+          <span class="dstat-lbl">збережено</span>
+        </div>
+        <div class="dstat">
+          <mat-icon>calendar_today</mat-icon>
+          <span class="dstat-val">{{ d.calendarCount }}</span>
+          <span class="dstat-lbl">у календарі</span>
+        </div>
+      </div>
+
+      <mat-divider />
+
+      <div class="detail-rows">
+        <div class="detail-row">
+          <span class="detail-label">Розсилка</span>
+          <span>{{ d.reportFrequency }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Остання розсилка</span>
+          <span>{{ d.lastReportSent ? (d.lastReportSent | date:'dd.MM.yyyy HH:mm') : 'Ніколи' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">2FA</span>
+          <span>{{ d.twoFactorEnabled ? '✅ Увімкнено' : '❌ Вимкнено' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Telegram</span>
+          <span>
+            @if (d.telegramChatId) {
+              ✅ @{{ d.telegramUsername }}
+            } @else if (d.telegramUsername) {
+              ⏳ @{{ d.telegramUsername }} (очікує /start)
+            } @else {
+              — не підключено
+            }
+          </span>
+        </div>
+      </div>
+
+      @if (d.filters.length > 0) {
+        <mat-divider />
+        <div class="filters-section">
+          <p class="filters-title">Підписки</p>
+          <div class="filters-wrap">
+            @for (f of d.filters; track f.id) {
+              <mat-chip class="filter-chip">{{ f.name }}</mat-chip>
+            }
+          </div>
+        </div>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="dialogRef.close()">Закрити</button>
+    <button mat-stroked-button
+            [color]="data.isBanned ? 'primary' : 'warn'"
+            [disabled]="acting()"
+            (click)="toggleBan()">
+      {{ data.isBanned ? 'Розблокувати' : 'Заблокувати' }}
+    </button>
+    <button mat-raised-button color="warn"
+            [disabled]="acting()"
+            (click)="confirmDelete()">
+      Видалити
+    </button>
+  </mat-dialog-actions>
+</div>

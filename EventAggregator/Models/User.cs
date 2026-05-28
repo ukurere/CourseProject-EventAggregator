@@ -24,6 +24,8 @@ public class User
     public bool TwoFactorEnabled { get; set; } = false;
     public string? TwoFactorSecret { get; set; }
 
+    public bool IsBanned { get; set; } = false;
+
     // ── Telegram ──────────────────────────────────────────────────────────────
     public bool   TelegramNotificationsEnabled { get; set; } = false;
     public string? TelegramUsername { get; set; }   // введено в профілі (без @)
