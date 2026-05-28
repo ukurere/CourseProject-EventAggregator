@@ -1,45 +1,30 @@
 {
   "version": "0.2.0",
-
-  "compounds": [
-    {
-      // Це те, що запускається по F5
-      "name": "🚀 Full Stack",
-      "configurations": ["Backend (.NET)", "Frontend (Chrome)"],
-      "stopAll": true,
-      "presentation": { "order": 1 }
-    }
-  ],
-
   "configurations": [
-
-    // ── .NET бекенд з дебагером ────────────────────────────────────────────────
     {
-      "name": "Backend (.NET)",
+      // F5 → збирає .NET → запускає Angular → відкриває браузер на localhost:4200
+      "name": "🚀 Full Stack",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build: backend",
+
+      // Спочатку збирає бекенд + запускає Angular (чекає поки Angular готовий)
+      "preLaunchTask": "serve: frontend",
+
+      // Запускає скомпільований .NET з дебагером
       "program": "${workspaceFolder}/EventAggregator/bin/Debug/net9.0/EventAggregator.dll",
       "args": [],
       "cwd": "${workspaceFolder}/EventAggregator",
       "stopAtEntry": false,
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_WATCH_SUPPRESS_MSBUILD_INCREMENTALISM": "true"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "presentation": { "hidden": true }
-    },
 
-    // ── Angular у Chrome ───────────────────────────────────────────────────────
-    {
-      "name": "Frontend (Chrome)",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:4200",
-      "webRoot": "${workspaceFolder}/event-aggregator-client/src",
-      "preLaunchTask": "serve: frontend",
-      "presentation": { "hidden": true }
+      // Коли .NET виведе "Now listening on:" — автоматично відкриє браузер на :4200
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:",
+        "uriFormat": "http://localhost:4200"
+      }
     }
-
   ]
 }

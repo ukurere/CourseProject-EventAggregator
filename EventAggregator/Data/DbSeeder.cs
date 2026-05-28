@@ -15,28 +15,24 @@ public static class DbSeeder
         if (db.FeedSources.Any()) return;
 
         db.FeedSources.AddRange(
-            // --- Новини ---
-            new FeedSource { Name = "Українська правда",    FeedUrl = "https://www.pravda.com.ua/rss/view_news/",                    Category = "news",    Language = "uk" },
-            new FeedSource { Name = "LIGA.net",             FeedUrl = "https://www.liga.net/en/news/rss.xml",                        Category = "news",    Language = "en" },
-            new FeedSource { Name = "AIN.EN",               FeedUrl = "https://en.ain.ua/feed/",                                     Category = "tech",    Language = "en" },
-            new FeedSource { Name = "dev.ua",               FeedUrl = "https://dev.ua/rss",                                          Category = "tech",    Language = "uk" },
-            new FeedSource { Name = "BBC News",             FeedUrl = "http://feeds.bbci.co.uk/news/rss.xml",                        Category = "news",    Language = "en" },
-            new FeedSource { Name = "The Guardian",         FeedUrl = "https://www.theguardian.com/world/rss",                       Category = "news",    Language = "en" },
-            new FeedSource { Name = "MIT News",             FeedUrl = "https://news.mit.edu/rss/feed",                               Category = "science", Language = "en" },
+            // --- Новини (перевірено — RSS коректний) ---
+            new FeedSource { Name = "Українська правда",    FeedUrl = "https://www.pravda.com.ua/rss/view_news/",                    Category = "news",    Language = "uk", IsActive = true },
+            new FeedSource { Name = "BBC News",             FeedUrl = "https://feeds.bbci.co.uk/news/rss.xml",                       Category = "news",    Language = "en", IsActive = true },
+            new FeedSource { Name = "The Guardian",         FeedUrl = "https://www.theguardian.com/world/rss",                       Category = "news",    Language = "en", IsActive = true },
+            new FeedSource { Name = "Reuters",              FeedUrl = "https://feeds.reuters.com/reuters/topNews",                    Category = "news",    Language = "en", IsActive = true },
+
+            // --- IT / Технології ---
+            new FeedSource { Name = "dev.ua",               FeedUrl = "https://dev.ua/rss",                                          Category = "tech",    Language = "uk", IsActive = true },
+            new FeedSource { Name = "AIN.UA",               FeedUrl = "https://ain.ua/feed/",                                        Category = "tech",    Language = "uk", IsActive = true },
+            new FeedSource { Name = "MIT News",             FeedUrl = "https://news.mit.edu/rss/feed",                               Category = "science", Language = "en", IsActive = true },
+            new FeedSource { Name = "Hacker News",          FeedUrl = "https://hnrss.org/frontpage",                                 Category = "tech",    Language = "en", IsActive = true },
 
             // --- IT-події ---
-            new FeedSource { Name = "DOU Calendar",         FeedUrl = "https://dou.ua/calendar/feed/",                               Category = "events",  Language = "uk" },
+            new FeedSource { Name = "DOU Calendar",         FeedUrl = "https://dou.ua/calendar/feed/",                               Category = "events",  Language = "uk", IsActive = true },
 
-            // --- Академічні події ---
-            new FeedSource { Name = "Stanford Events",      FeedUrl = "https://events.stanford.edu/rss",                             Category = "events",  Language = "en" },
-            new FeedSource { Name = "Harvard Gazette",      FeedUrl = "https://news.harvard.edu/gazette/feed/harvard-events/",       Category = "events",  Language = "en" },
-
-            // --- Культурні / концертні події ---
-            new FeedSource { Name = "Афіша Запоріжжя",     FeedUrl = "https://afisha.zp.ua/docs/feedrss/",                          Category = "events",  Language = "uk" },
-            new FeedSource { Name = "AfishaLviv Концерти", FeedUrl = "https://afishalviv.net/category/koncerti-ta-festivali/feed/", Category = "events",  Language = "uk" },
-            new FeedSource { Name = "LvivOnline",           FeedUrl = "https://lviv-online.com/ua/feed/",                            Category = "events",  Language = "uk" },
-            new FeedSource { Name = "OBX Things Events",    FeedUrl = "https://www.obxthings.com/events.rss",                       Category = "events",  Language = "en" },
-            new FeedSource { Name = "Kingston Live",        FeedUrl = "https://kingstonlive.ca/calendar/rss",                        Category = "events",  Language = "en" }
+            // --- Культурні / місцеві події ---
+            new FeedSource { Name = "AfishaLviv Концерти", FeedUrl = "https://afishalviv.net/category/koncerti-ta-festivali/feed/", Category = "events",  Language = "uk", IsActive = true },
+            new FeedSource { Name = "LvivOnline",           FeedUrl = "https://lviv-online.com/ua/feed/",                            Category = "events",  Language = "uk", IsActive = true }
         );
 
         db.SaveChanges();
