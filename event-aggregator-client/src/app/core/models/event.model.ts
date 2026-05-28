@@ -7,6 +7,7 @@ export interface EventItem {
   id: number;
   title: string;
   description: string;
+  contentHtml?: string;
   sourceUrl: string;
   imageUrl?: string;
   publishedDate: string;
