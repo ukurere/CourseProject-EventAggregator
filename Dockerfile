@@ -2,7 +2,7 @@
 FROM node:20-alpine AS angular-build
 WORKDIR /client
 COPY event-aggregator-client/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY event-aggregator-client/ ./
 RUN npm run build -- --configuration production
 
