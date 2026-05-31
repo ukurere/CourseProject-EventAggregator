@@ -15,8 +15,9 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+var dbPath = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=events.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=events.db"));
+    options.UseSqlite(dbPath));
 
 builder.Services.AddHttpClient<RssFeedService>(client =>
 {
@@ -84,9 +85,21 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();
