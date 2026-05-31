@@ -18,6 +18,12 @@ builder.Services.AddOpenApi();
 var dbPath = Environment.GetEnvironmentVariable("DB_PATH") is string envDbPath
     ? $"Data Source={envDbPath}"
     : builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=events.db";
+
+// Ensure the SQLite database directory exists (needed for Railway volumes)
+var dbFile = dbPath.Replace("Data Source=", "").Split(';')[0].Trim();
+var dbDir  = Path.GetDirectoryName(dbFile);
+if (!string.IsNullOrEmpty(dbDir))
+    Directory.CreateDirectory(dbDir);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(dbPath));
 
