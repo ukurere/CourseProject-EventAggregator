@@ -15,7 +15,9 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
-var dbPath = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=events.db";
+var dbPath = Environment.GetEnvironmentVariable("DB_PATH") is string envDbPath
+    ? $"Data Source={envDbPath}"
+    : builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=events.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(dbPath));
 
