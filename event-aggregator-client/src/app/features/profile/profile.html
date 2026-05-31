@@ -90,6 +90,32 @@
                 Зберегти Telegram
               </button>
             </div>
+
+            <!-- ── Надіслати зараз ── -->
+            <mat-divider class="section-divider" />
+            <div class="section-title">
+              <mat-icon>send</mat-icon>
+              <span>Надіслати дайджест зараз</span>
+            </div>
+            <div class="send-now-block">
+              <button mat-stroked-button
+                      [disabled]="sendingEmail()"
+                      (click)="sendEmailNow()">
+                @if (sendingEmail()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>email</mat-icon> }
+                На пошту
+              </button>
+
+              <button mat-stroked-button
+                      [disabled]="sendingTelegram() || !tgChatId()"
+                      [matTooltip]="tgChatId() ? '' : 'Спочатку підключіть Telegram'"
+                      (click)="sendTelegramNow()">
+                @if (sendingTelegram()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>send</mat-icon> }
+                У Telegram
+              </button>
+            </div>
+
           }
         </div>
       </mat-tab>
@@ -143,7 +169,9 @@
           <mat-icon>tune</mat-icon>&nbsp;Підписки
         </ng-template>
         <div class="tab-content">
-          <p class="hint">Обрані фільтри формують стрічку та email-дайджест.</p>
+          <p class="hint">Обрані фільтри та ключові слова формують стрічку та email-дайджест.</p>
+
+          <!-- ── Категорії ── -->
           @for (group of allGroups(); track group.type) {
             <div class="filter-group">
               <p class="group-label">{{ group.label }}</p>
@@ -156,6 +184,40 @@
                 }
               </mat-chip-set>
             </div>
+          }
+
+          <!-- ── Власні ключові слова ── -->
+          <mat-divider class="section-divider" />
+          <p class="group-label">Власні ключові слова</p>
+          <p class="hint">Додайте будь-які слова — система шукатиме їх у заголовках і описах подій.</p>
+
+          <div class="keyword-input-row">
+            <mat-form-field appearance="outline" class="keyword-field">
+              <mat-label>Нове ключове слово</mat-label>
+              <input matInput
+                     [(ngModel)]="newKeyword"
+                     (keydown)="onKeywordEnter($event)"
+                     placeholder="наприклад: джаз" />
+              <mat-hint>Натисніть Enter або кнопку «+»</mat-hint>
+            </mat-form-field>
+            <button mat-mini-fab color="primary"
+                    [disabled]="!newKeyword.trim()"
+                    (click)="addKeyword()">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+
+          @if (userKeywords().length > 0) {
+            <mat-chip-set class="keyword-chips">
+              @for (kw of userKeywords(); track kw.id) {
+                <mat-chip (removed)="removeKeyword(kw)">
+                  {{ kw.keyword }}
+                  <button matChipRemove><mat-icon>cancel</mat-icon></button>
+                </mat-chip>
+              }
+            </mat-chip-set>
+          } @else {
+            <p class="hint muted">Ще немає ключових слів</p>
           }
         </div>
       </mat-tab>
@@ -227,7 +289,7 @@
                     </button>
                   </h3>
                 } @else {
-                  <h3><mat-icon>event_note</mat-icon> Усі заплановані події</h3>
+                  <h3><mat-icon>event_note</mat-icon> Усі відмічені матеріали</h3>
                 }
 
                 @if (eventsForDate().length === 0) {

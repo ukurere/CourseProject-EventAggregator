@@ -68,7 +68,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim(System.Security.Claims.ClaimTypes.Email,
+                            "adamyocardium@gmail.com"));
+});
 
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>

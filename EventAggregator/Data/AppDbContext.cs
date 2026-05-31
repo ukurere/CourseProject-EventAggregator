@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<UserFilter> UserFilters => Set<UserFilter>();
     public DbSet<UserEventStatus> UserEventStatuses => Set<UserEventStatus>();
     public DbSet<FeedSource> FeedSources => Set<FeedSource>();
+    public DbSet<UserKeyword> UserKeywords => Set<UserKeyword>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

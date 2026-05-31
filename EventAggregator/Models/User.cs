@@ -33,4 +33,5 @@ public class User
 
     public ICollection<UserFilter> UserFilters { get; set; } = new List<UserFilter>();
     public ICollection<UserEventStatus> UserEventStatuses { get; set; } = new List<UserEventStatus>();
+    public ICollection<UserKeyword> UserKeywords { get; set; } = new List<UserKeyword>();
 }

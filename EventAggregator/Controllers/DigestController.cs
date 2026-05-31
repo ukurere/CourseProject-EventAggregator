@@ -50,6 +50,30 @@ public class DigestController : ControllerBase
         }
     }
 
+    /// <summary>Надіслати дайджест тільки в Telegram (для поточного користувача)</summary>
+    [HttpPost("send-telegram/{userId:int}")]
+    public async Task<IActionResult> SendTelegramToUser(int userId)
+    {
+        var user = await _db.Users
+            .Include(u => u.UserFilters)
+                .ThenInclude(uf => uf.Filter)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null) return NotFound();
+        if (!user.TelegramChatId.HasValue)
+            return BadRequest(new { error = "Telegram не підключено. Спочатку надішліть /start боту." });
+
+        try
+        {
+            await _digestService.SendTelegramDigestAsync(user);
+            return Ok(new { message = "Дайджест надіслано в Telegram" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
     /// <summary>Переглянути HTML-дайджест у браузері без надсилання</summary>
     [HttpGet("preview/{userId:int}")]
     public async Task<IActionResult> Preview(int userId)

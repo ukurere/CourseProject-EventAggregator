@@ -47,10 +47,17 @@ public class DigestService
             .Select(uf => uf.Filter.SearchKeyword.ToLower())
             .ToList();
 
+        // Додаємо персональні ключові слова користувача
+        var personalKeywords = await _db.UserKeywords
+            .Where(k => k.UserId == user.Id)
+            .Select(k => k.Keyword)
+            .ToListAsync();
+        keywords.AddRange(personalKeywords);
+
         var events = await _db.Events
             .Include(e => e.FeedSource)
             .Where(e => e.PublishedDate >= from)
-            .Where(e => keywords.Any(k =>
+            .Where(e => !keywords.Any() || keywords.Any(k =>
                 e.Title.ToLower().Contains(k) ||
                 e.Description.ToLower().Contains(k)))
             .OrderByDescending(e => e.PublishedDate)
@@ -91,10 +98,16 @@ public class DigestService
             .Select(uf => uf.Filter.SearchKeyword.ToLower())
             .ToList();
 
+        var personalKeywords = await _db.UserKeywords
+            .Where(k => k.UserId == user.Id)
+            .Select(k => k.Keyword)
+            .ToListAsync();
+        keywords.AddRange(personalKeywords);
+
         var events = await _db.Events
             .Include(e => e.FeedSource)
             .Where(e => e.PublishedDate >= from)
-            .Where(e => keywords.Any(k =>
+            .Where(e => !keywords.Any() || keywords.Any(k =>
                 e.Title.ToLower().Contains(k) ||
                 e.Description.ToLower().Contains(k)))
             .OrderByDescending(e => e.PublishedDate)
