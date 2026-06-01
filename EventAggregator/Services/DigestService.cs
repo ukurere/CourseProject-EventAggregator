@@ -21,6 +21,56 @@ public class DigestService
         _logger           = logger;
     }
 
+    /// <summary>
+    /// Відправка на вимогу (кнопка «Надіслати зараз»).
+    /// Завжди бере останні 30 днів, повертає кількість надісланих подій.
+    /// Кидає InvalidOperationException якщо нічого не знайдено.
+    /// </summary>
+    public async Task<int> SendNowAsync(User user, bool telegramOnly = false)
+    {
+        var from = DateTime.UtcNow.AddDays(-30);
+
+        var keywords = user.UserFilters
+            .Select(uf => uf.Filter.SearchKeyword.ToLower())
+            .ToList();
+
+        var personalKeywords = await _db.UserKeywords
+            .Where(k => k.UserId == user.Id)
+            .Select(k => k.Keyword)
+            .ToListAsync();
+        keywords.AddRange(personalKeywords);
+
+        var events = await _db.Events
+            .Include(e => e.FeedSource)
+            .Where(e => e.PublishedDate >= from)
+            .Where(e => !keywords.Any() || keywords.Any(k =>
+                e.Title.ToLower().Contains(k) ||
+                e.Description.ToLower().Contains(k)))
+            .OrderByDescending(e => e.PublishedDate)
+            .Take(15)
+            .ToListAsync();
+
+        if (events.Count == 0)
+            throw new InvalidOperationException(
+                "Не знайдено жодної події за останні 30 днів за вашими підписками. " +
+                "Спробуйте додати більше ключових слів або категорій.");
+
+        if (!telegramOnly)
+        {
+            var subject = "EventAggregator — Дайджест на ваш запит";
+            var html = BuildHtml(user, events);
+            await _emailService.SendAsync(user.Email, subject, html);
+        }
+
+        if (user.TelegramNotificationsEnabled && user.TelegramChatId.HasValue)
+        {
+            var tgText = BuildTelegramText(user, events);
+            await _telegramService.SendMessageAsync(user.TelegramChatId.Value, tgText);
+        }
+
+        return events.Count;
+    }
+
     public async Task SendAllDueAsync()
     {
         var now = DateTime.UtcNow;

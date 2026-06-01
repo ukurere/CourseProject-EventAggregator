@@ -28,7 +28,7 @@ public class DigestController : ControllerBase
         return Ok(new { message = "Дайджести оброблено" });
     }
 
-    /// <summary>Примусово надіслати дайджест конкретному користувачу (для тестування)</summary>
+    /// <summary>Надіслати дайджест на пошту (кнопка «Надіслати зараз»)</summary>
     [HttpPost("send/{userId:int}")]
     public async Task<IActionResult> SendToUser(int userId)
     {
@@ -41,8 +41,12 @@ public class DigestController : ControllerBase
 
         try
         {
-            await _digestService.SendDigestAsync(user);
-            return Ok(new { message = $"Дайджест надіслано на {user.Email}" });
+            var count = await _digestService.SendNowAsync(user, telegramOnly: false);
+            return Ok(new { message = $"Дайджест надіслано на {user.Email} ({count} подій)" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
@@ -50,7 +54,7 @@ public class DigestController : ControllerBase
         }
     }
 
-    /// <summary>Надіслати дайджест тільки в Telegram (для поточного користувача)</summary>
+    /// <summary>Надіслати дайджест тільки в Telegram (кнопка «У Telegram»)</summary>
     [HttpPost("send-telegram/{userId:int}")]
     public async Task<IActionResult> SendTelegramToUser(int userId)
     {
@@ -65,8 +69,12 @@ public class DigestController : ControllerBase
 
         try
         {
-            await _digestService.SendTelegramDigestAsync(user);
-            return Ok(new { message = "Дайджест надіслано в Telegram" });
+            var count = await _digestService.SendNowAsync(user, telegramOnly: true);
+            return Ok(new { message = $"Дайджест надіслано в Telegram ({count} подій)" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
