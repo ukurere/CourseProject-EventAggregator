@@ -31,17 +31,7 @@
               (click)="filterByCategory('science')">🔬 Наука</button>
     </div>
 
-    <mat-divider />
 
-    @for (group of filterGroups(); track group.type) {
-      <div class="filter-section">
-        <p class="filter-label">{{ group.label }}</p>
-        @for (filter of group.filters; track filter.id) {
-          <mat-checkbox (change)="onSearch()">{{ filter.name }}</mat-checkbox>
-        }
-      </div>
-      <mat-divider />
-    }
   </mat-sidenav>
 
   <!-- ── Основний контент ── -->
