@@ -40,12 +40,19 @@ public class DigestService
             .ToListAsync();
         keywords.AddRange(personalKeywords);
 
+        var prefLang = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? null : user.PreferredLanguage;
+        var prefCats = string.IsNullOrWhiteSpace(user.PreferredCategories)
+            ? null
+            : user.PreferredCategories.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
         var events = await _db.Events
             .Include(e => e.FeedSource)
             .Where(e => e.PublishedDate >= from)
             .Where(e => !keywords.Any() || keywords.Any(k =>
                 e.Title.ToLower().Contains(k) ||
                 e.Description.ToLower().Contains(k)))
+            .Where(e => prefLang == null || e.FeedSource!.Language == prefLang)
+            .Where(e => prefCats == null || prefCats.Contains(e.Category ?? ""))
             .OrderByDescending(e => e.PublishedDate)
             .Take(15)
             .ToListAsync();

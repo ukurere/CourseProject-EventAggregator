@@ -171,7 +171,62 @@
         <div class="tab-content">
           <p class="hint">Обрані фільтри та ключові слова формують стрічку та email-дайджест.</p>
 
+          <!-- ── Мова ── -->
+          <p class="group-label">Мова</p>
+          <div class="lang-buttons">
+            <button mat-stroked-button
+                    [class.active]="preferredLanguage() === 'uk'"
+                    (click)="setLanguage('uk')">
+              🇺🇦 Українська
+            </button>
+            <button mat-stroked-button
+                    [class.active]="preferredLanguage() === 'en'"
+                    (click)="setLanguage('en')">
+              🇬🇧 English
+            </button>
+          </div>
+          <p class="hint muted">Якщо нічого не обрано — показуються всі мови.</p>
+
+          <mat-divider class="section-divider" />
+
           <!-- ── Категорії ── -->
+          <p class="group-label">Категорія</p>
+          <div class="lang-buttons">
+            @for (cat of CATEGORIES; track cat.value) {
+              <button mat-stroked-button
+                      [class.active]="preferredCategories().has(cat.value)"
+                      (click)="toggleCategory(cat.value)">
+                {{ cat.label }}
+              </button>
+            }
+          </div>
+          <p class="hint muted">Якщо нічого не обрано — показуються всі категорії.</p>
+
+          <mat-divider class="section-divider" />
+
+          <!-- ── Надіслати дайджест ── -->
+          <p class="group-label">Надіслати дайджест зараз</p>
+          <div class="send-now-block">
+            <button mat-stroked-button
+                    [disabled]="sendingEmail()"
+                    (click)="sendEmailNow()">
+              @if (sendingEmail()) { <mat-spinner diameter="18" /> }
+              @else { <mat-icon>email</mat-icon> }
+              На пошту
+            </button>
+            <button mat-stroked-button
+                    [disabled]="sendingTelegram() || !tgChatId()"
+                    [matTooltip]="tgChatId() ? '' : 'Спочатку підключіть Telegram у вкладці Профіль'"
+                    (click)="sendTelegramNow()">
+              @if (sendingTelegram()) { <mat-spinner diameter="18" /> }
+              @else { <mat-icon>send</mat-icon> }
+              У Telegram
+            </button>
+          </div>
+
+          <mat-divider class="section-divider" />
+
+          <!-- ── Типи подій ── -->
           @for (group of allGroups(); track group.type) {
             <div class="filter-group">
               <p class="group-label">{{ group.label }}</p>

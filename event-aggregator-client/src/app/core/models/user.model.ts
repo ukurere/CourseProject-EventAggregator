@@ -12,6 +12,8 @@ export interface User {
   telegramNotificationsEnabled: boolean;
   telegramUsername?: string;
   telegramChatId?: number;
+  preferredLanguage?: string;
+  preferredCategories?: string;
   filters: Filter[];
 }
 
@@ -27,6 +29,8 @@ export interface UpdateUserRequest {
   lastName?: string;
   photoUrl?: string;
   reportFrequency?: string;
+  preferredLanguage?: string;
+  preferredCategories?: string;
 }
 
 export interface UpdateTelegramRequest {

@@ -31,6 +31,12 @@ public class User
     public string? TelegramUsername { get; set; }   // введено в профілі (без @)
     public long?   TelegramChatId   { get; set; }   // встановлюється після /start
 
+    // ── Preferences ──────────────────────────────────────────────────────────
+    /// <summary>"uk", "en" or null/empty = both languages</summary>
+    public string? PreferredLanguage { get; set; }
+    /// <summary>Comma-separated: "events,news,tech,science" or null/empty = all</summary>
+    public string? PreferredCategories { get; set; }
+
     public ICollection<UserFilter> UserFilters { get; set; } = new List<UserFilter>();
     public ICollection<UserEventStatus> UserEventStatuses { get; set; } = new List<UserEventStatus>();
     public ICollection<UserKeyword> UserKeywords { get; set; } = new List<UserKeyword>();

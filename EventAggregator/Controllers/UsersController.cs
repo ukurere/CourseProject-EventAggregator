@@ -57,10 +57,12 @@ public class UsersController : ControllerBase
         var user = await _db.Users.FindAsync(id);
         if (user is null) return NotFound();
 
-        user.FirstName = req.FirstName ?? user.FirstName;
-        user.LastName = req.LastName ?? user.LastName;
-        user.PhotoUrl = req.PhotoUrl ?? user.PhotoUrl;
-        user.ReportFrequency = req.ReportFrequency ?? user.ReportFrequency;
+        user.FirstName          = req.FirstName          ?? user.FirstName;
+        user.LastName           = req.LastName           ?? user.LastName;
+        user.PhotoUrl           = req.PhotoUrl           ?? user.PhotoUrl;
+        user.ReportFrequency    = req.ReportFrequency    ?? user.ReportFrequency;
+        user.PreferredLanguage  = req.PreferredLanguage  ?? user.PreferredLanguage;
+        user.PreferredCategories = req.PreferredCategories ?? user.PreferredCategories;
 
         await _db.SaveChangesAsync();
         return NoContent();
@@ -298,11 +300,13 @@ public class UsersController : ControllerBase
         u.TelegramNotificationsEnabled,
         u.TelegramUsername,
         u.TelegramChatId,
+        u.PreferredLanguage,
+        u.PreferredCategories,
         Filters = filters.Select(f => new { f.Id, f.Name, f.Type })
     };
 }
 
 public record CreateUserRequest(string FirstName, string LastName, string Email, string? ReportFrequency);
-public record UpdateUserRequest(string? FirstName, string? LastName, string? PhotoUrl, string? ReportFrequency);
+public record UpdateUserRequest(string? FirstName, string? LastName, string? PhotoUrl, string? ReportFrequency, string? PreferredLanguage, string? PreferredCategories);
 public record UpdateTelegramRequest(bool TelegramNotificationsEnabled, string? TelegramUsername);
 public record SetEventStatusRequest(string? Status, bool IsInCalendar);

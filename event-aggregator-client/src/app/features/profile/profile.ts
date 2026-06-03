@@ -54,6 +54,17 @@ export class Profile implements OnInit {
   calendarEvents = signal<EventItem[]>([]);
   loading        = signal(true);
 
+  // Мова / категорії
+  preferredLanguage   = signal<string>('');
+  preferredCategories = signal<Set<string>>(new Set());
+
+  readonly CATEGORIES = [
+    { value: 'events',  label: '📅 Події' },
+    { value: 'news',    label: '📰 Новини' },
+    { value: 'tech',    label: '💻 IT/Tech' },
+    { value: 'science', label: '🔬 Наука' },
+  ];
+
   // Ключові слова
   userKeywords   = signal<UserKeyword[]>([]);
   newKeyword     = '';
@@ -109,6 +120,10 @@ export class Profile implements OnInit {
         this.tgEnabled.set(u.telegramNotificationsEnabled);
         this.tgUsername.set(u.telegramUsername ?? '');
         this.tgChatId.set(u.telegramChatId ?? null);
+        this.preferredLanguage.set(u.preferredLanguage ?? '');
+        this.preferredCategories.set(
+          new Set((u.preferredCategories ?? '').split(',').filter(Boolean))
+        );
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -135,6 +150,28 @@ export class Profile implements OnInit {
         this.snackBar.open(`«${filter.name}» додано до підписок`, '', { duration: 2000 });
       });
     }
+  }
+
+  toggleCategory(cat: string) {
+    this.preferredCategories.update(s => {
+      const n = new Set(s);
+      n.has(cat) ? n.delete(cat) : n.add(cat);
+      return n;
+    });
+    this.savePreferences();
+  }
+
+  setLanguage(lang: string) {
+    this.preferredLanguage.set(this.preferredLanguage() === lang ? '' : lang);
+    this.savePreferences();
+  }
+
+  savePreferences() {
+    const cats = [...this.preferredCategories()].join(',');
+    this.usersService.update(this.userId, {
+      preferredLanguage: this.preferredLanguage() || undefined,
+      preferredCategories: cats || undefined,
+    }).subscribe();
   }
 
   saveProfile() {

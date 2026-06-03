@@ -74,6 +74,46 @@
   input { letter-spacing: 0.25em; font-size: 1.1rem; text-align: center; }
 }
 
+// ── Мова/Категорія кнопки ─────────────────────────────────────────────────
+
+.group-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.lang-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  button {
+    border-radius: 20px;
+    min-width: 100px;
+    transition: background 0.15s, color 0.15s;
+
+    &.active {
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      border-color: #1a73e8;
+      font-weight: 500;
+    }
+  }
+}
+
+.send-now-block {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.hint.muted { color: #bbb; }
+
 // ── Підписки ──────────────────────────────────────────────────────────────
 
 .filter-group {
