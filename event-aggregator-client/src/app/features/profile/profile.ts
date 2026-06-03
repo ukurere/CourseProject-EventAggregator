@@ -238,7 +238,13 @@ export class Profile implements OnInit {
     this.twoFaLoading.set(true);
     this.auth.setupTwoFactor().subscribe({
       next: res => { this.qrUri.set(res.otpauthUri); this.twoFaLoading.set(false); },
-      error: ()  => this.twoFaLoading.set(false),
+      error: err => {
+        this.twoFaLoading.set(false);
+        const msg = err.status === 401
+          ? 'Сесія закінчилась — увійдіть знову'
+          : (err.error?.message ?? 'Помилка налаштування 2FA');
+        this.snackBar.open(msg, 'ОК', { duration: 4000 });
+      },
     });
   }
 
