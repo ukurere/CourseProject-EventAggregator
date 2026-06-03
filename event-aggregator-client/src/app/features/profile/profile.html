@@ -226,21 +226,6 @@
 
           <mat-divider class="section-divider" />
 
-          <!-- ── Типи подій ── -->
-          @for (group of allGroups(); track group.type) {
-            <div class="filter-group">
-              <p class="group-label">{{ group.label }}</p>
-              <mat-chip-set>
-                @for (filter of group.filters; track filter.id) {
-                  <mat-chip [class.subscribed]="isSubscribed(filter.id)" (click)="toggleFilter(filter)">
-                    @if (isSubscribed(filter.id)) { <mat-icon matChipLeading>check</mat-icon> }
-                    {{ filter.name }}
-                  </mat-chip>
-                }
-              </mat-chip-set>
-            </div>
-          }
-
           <!-- ── Власні ключові слова ── -->
           <mat-divider class="section-divider" />
           <p class="group-label">Власні ключові слова</p>
