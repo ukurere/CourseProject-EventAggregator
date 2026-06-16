@@ -57,10 +57,12 @@ public class UsersController : ControllerBase
         var user = await _db.Users.FindAsync(id);
         if (user is null) return NotFound();
 
-        user.FirstName = req.FirstName ?? user.FirstName;
-        user.LastName = req.LastName ?? user.LastName;
-        user.PhotoUrl = req.PhotoUrl ?? user.PhotoUrl;
-        user.ReportFrequency = req.ReportFrequency ?? user.ReportFrequency;
+        user.FirstName          = req.FirstName          ?? user.FirstName;
+        user.LastName           = req.LastName           ?? user.LastName;
+        user.PhotoUrl           = req.PhotoUrl           ?? user.PhotoUrl;
+        user.ReportFrequency    = req.ReportFrequency    ?? user.ReportFrequency;
+        user.PreferredLanguage  = req.PreferredLanguage  ?? user.PreferredLanguage;
+        user.PreferredCategories = req.PreferredCategories ?? user.PreferredCategories;
 
         await _db.SaveChangesAsync();
         return NoContent();
@@ -259,6 +261,33 @@ public class UsersController : ControllerBase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    // ── Telegram ─────────────────────────────────────────────────────────────
+
+    /// <summary>Зберегти Telegram-налаштування користувача</summary>
+    [HttpPatch("{id:int}/telegram")]
+    public async Task<IActionResult> UpdateTelegram(int id, UpdateTelegramRequest req)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null) return NotFound();
+
+        // Strip leading @ if user typed it
+        var username = req.TelegramUsername?.Trim().TrimStart('@').ToLower();
+
+        // If username changed — reset chat link so user needs to /start again
+        if (user.TelegramUsername != username)
+        {
+            user.TelegramUsername = username;
+            user.TelegramChatId   = null;
+        }
+
+        user.TelegramNotificationsEnabled = req.TelegramNotificationsEnabled;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { user.TelegramChatId });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
     private static object MapUser(User u, IEnumerable<Filter> filters) => new
     {
         u.Id,
@@ -268,10 +297,16 @@ public class UsersController : ControllerBase
         u.PhotoUrl,
         u.ReportFrequency,
         u.LastReportSent,
+        u.TelegramNotificationsEnabled,
+        u.TelegramUsername,
+        u.TelegramChatId,
+        u.PreferredLanguage,
+        u.PreferredCategories,
         Filters = filters.Select(f => new { f.Id, f.Name, f.Type })
     };
 }
 
 public record CreateUserRequest(string FirstName, string LastName, string Email, string? ReportFrequency);
-public record UpdateUserRequest(string? FirstName, string? LastName, string? PhotoUrl, string? ReportFrequency);
+public record UpdateUserRequest(string? FirstName, string? LastName, string? PhotoUrl, string? ReportFrequency, string? PreferredLanguage, string? PreferredCategories);
+public record UpdateTelegramRequest(bool TelegramNotificationsEnabled, string? TelegramUsername);
 public record SetEventStatusRequest(string? Status, bool IsInCalendar);

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CreateUserRequest, UpdateUserRequest, User } from '../models/user.model';
+import { CreateUserRequest, UpdateUserRequest, UpdateTelegramRequest, User } from '../models/user.model';
 import { EventItem, EventsResponse, EventStatus } from '../models/event.model';
 import { Filter } from '../models/filter.model';
 import { environment } from '../../../environments/environment';
@@ -20,6 +20,10 @@ export class UsersService {
 
   update(id: number, req: UpdateUserRequest) {
     return this.http.put(`${this.base}/${id}`, req);
+  }
+
+  updateTelegram(id: number, req: UpdateTelegramRequest) {
+    return this.http.patch<{ telegramChatId?: number }>(`${this.base}/${id}/telegram`, req);
   }
 
   getFilters(id: number) {

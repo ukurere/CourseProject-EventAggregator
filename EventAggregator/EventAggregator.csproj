@@ -22,6 +22,7 @@
     </PackageReference>
     <PackageReference Include="Otp.NET" Version="1.4.1" />
     <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.8" />
+    <PackageReference Include="Telegram.Bot" Version="22.10.0.1" />
   </ItemGroup>
 
   <ItemGroup>

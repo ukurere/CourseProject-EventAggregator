@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // F5 → збирає .NET → запускає Angular → відкриває браузер на localhost:4200
+      "name": "🚀 Full Stack",
+      "type": "coreclr",
+      "request": "launch",
+
+      // Спочатку збирає бекенд + запускає Angular (чекає поки Angular готовий)
+      "preLaunchTask": "serve: frontend",
+
+      // Запускає скомпільований .NET з дебагером
+      "program": "${workspaceFolder}/EventAggregator/bin/Debug/net9.0/EventAggregator.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/EventAggregator",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+
+      // Коли .NET виведе "Now listening on:" — автоматично відкриє браузер на :4200
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:",
+        "uriFormat": "http://localhost:4200"
+      }
+    }
+  ]
+}

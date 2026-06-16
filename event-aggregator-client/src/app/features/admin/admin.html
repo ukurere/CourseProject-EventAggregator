@@ -52,90 +52,173 @@
       </mat-card>
     </div>
 
-    <!-- ── Таблиця джерел ── -->
+    <!-- ── Вкладки ── -->
     <mat-card class="table-card">
-      <h2><mat-icon>list</mat-icon> RSS-джерела</h2>
-      <mat-divider />
+      <mat-tab-group animationDuration="150ms">
 
-      <table mat-table [dataSource]="s.sources" class="sources-table">
+        <!-- ─── Вкладка: RSS-джерела ─────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">rss_feed</mat-icon> RSS-джерела
+          </ng-template>
 
-        <!-- Назва -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Джерело</th>
-          <td mat-cell *matCellDef="let row">
-            <span class="source-name">{{ row.name }}</span>
-          </td>
-        </ng-container>
+          <div class="tab-content">
+            <table mat-table [dataSource]="s.sources" class="sources-table">
 
-        <!-- Категорія -->
-        <ng-container matColumnDef="category">
-          <th mat-header-cell *matHeaderCellDef>Категорія</th>
-          <td mat-cell *matCellDef="let row">
-            <mat-chip class="cat-chip cat-{{ row.category }}">{{ row.category }}</mat-chip>
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Джерело</th>
+                <td mat-cell *matCellDef="let row">
+                  <span class="source-name">{{ row.name }}</span>
+                </td>
+              </ng-container>
 
-        <!-- Мова -->
-        <ng-container matColumnDef="language">
-          <th mat-header-cell *matHeaderCellDef>Мова</th>
-          <td mat-cell *matCellDef="let row">
-            {{ row.language === 'uk' ? '🇺🇦' : '🇬🇧' }}
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Категорія</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-chip class="cat-chip cat-{{ row.category }}">{{ row.category }}</mat-chip>
+                </td>
+              </ng-container>
 
-        <!-- Кількість подій + прогрес-бар -->
-        <ng-container matColumnDef="events">
-          <th mat-header-cell *matHeaderCellDef>Подій</th>
-          <td mat-cell *matCellDef="let row">
-            <div class="events-cell">
-              <span class="events-count">{{ row.eventCount }}</span>
-              <mat-progress-bar mode="determinate"
-                [value]="maxEvents > 0 ? (row.eventCount / maxEvents) * 100 : 0"
-                class="events-bar" />
-            </div>
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="language">
+                <th mat-header-cell *matHeaderCellDef>Мова</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.language === 'uk' ? '🇺🇦' : '🇬🇧' }}
+                </td>
+              </ng-container>
 
-        <!-- Останнє оновлення -->
-        <ng-container matColumnDef="lastFetched">
-          <th mat-header-cell *matHeaderCellDef>Оновлено</th>
-          <td mat-cell *matCellDef="let row">
-            <span [matTooltip]="row.lastFetched ? (row.lastFetched | date:'dd.MM.yyyy HH:mm') : ''">
-              {{ timeAgo(row.lastFetched) }}
-            </span>
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="events">
+                <th mat-header-cell *matHeaderCellDef>Подій</th>
+                <td mat-cell *matCellDef="let row">
+                  <div class="events-cell">
+                    <span class="events-count">{{ row.eventCount }}</span>
+                    <mat-progress-bar mode="determinate"
+                      [value]="maxEvents > 0 ? (row.eventCount / maxEvents) * 100 : 0"
+                      class="events-bar" />
+                  </div>
+                </td>
+              </ng-container>
 
-        <!-- Статус -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Статус</th>
-          <td mat-cell *matCellDef="let row">
-            <mat-chip [class]="row.isActive ? 'chip-active' : 'chip-inactive'">
-              {{ row.isActive ? 'Активне' : 'Вимкнено' }}
-            </mat-chip>
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="lastFetched">
+                <th mat-header-cell *matHeaderCellDef>Оновлено</th>
+                <td mat-cell *matCellDef="let row">
+                  <span [matTooltip]="row.lastFetched ? (row.lastFetched | date:'dd.MM.yyyy HH:mm') : ''">
+                    {{ timeAgo(row.lastFetched) }}
+                  </span>
+                </td>
+              </ng-container>
 
-        <!-- Дії -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let row">
-            <button mat-icon-button color="primary"
-                    [disabled]="refreshingId() === row.id || refreshingAll()"
-                    [matTooltip]="'Оновити ' + row.name"
-                    (click)="refreshOne(row)">
-              @if (refreshingId() === row.id) {
-                <mat-spinner diameter="18" />
-              } @else {
-                <mat-icon>sync</mat-icon>
-              }
-            </button>
-          </td>
-        </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Активне</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-slide-toggle
+                    [checked]="row.isActive"
+                    [disabled]="togglingId() === row.id"
+                    (change)="toggleActive(row)"
+                    color="primary" />
+                </td>
+              </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="columns"></tr>
-        <tr mat-row *matRowDef="let row; columns: columns;"></tr>
-      </table>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                  <button mat-icon-button color="primary"
+                          [disabled]="refreshingId() === row.id || refreshingAll() || !row.isActive"
+                          [matTooltip]="row.isActive ? 'Оновити ' + row.name : 'Джерело вимкнено'"
+                          (click)="refreshOne(row)">
+                    @if (refreshingId() === row.id) {
+                      <mat-spinner diameter="18" />
+                    } @else {
+                      <mat-icon>sync</mat-icon>
+                    }
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="sourceColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: sourceColumns;"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- ─── Вкладка: Користувачі ──────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">people</mat-icon> Користувачі
+          </ng-template>
+
+          <div class="tab-content">
+            @if (usersLoading()) {
+              <div class="spinner-wrap"><mat-spinner /></div>
+            } @else {
+              <table mat-table [dataSource]="users()" class="users-table">
+
+                <ng-container matColumnDef="avatar">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let row">
+                    <div class="user-avatar-sm" [class.banned]="row.isBanned">
+                      {{ initials(row) }}
+                    </div>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Ім'я</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="source-name">{{ row.firstName }} {{ row.lastName }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="email">
+                  <th mat-header-cell *matHeaderCellDef>Email</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="user-email-cell">{{ row.email }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="filters">
+                  <th mat-header-cell *matHeaderCellDef>Фільтри</th>
+                  <td mat-cell *matCellDef="let row">{{ row.filterCount }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="telegram">
+                  <th mat-header-cell *matHeaderCellDef>Telegram</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (row.telegramChatId) {
+                      <mat-icon class="tg-icon connected" matTooltip="Підключено">check_circle</mat-icon>
+                    } @else {
+                      <mat-icon class="tg-icon" matTooltip="Не підключено">cancel</mat-icon>
+                    }
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Статус</th>
+                  <td mat-cell *matCellDef="let row">
+                    <mat-chip [class]="row.isBanned ? 'chip-banned' : 'chip-active-user'">
+                      {{ row.isBanned ? 'Заблокований' : 'Активний' }}
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let row">
+                    <button mat-icon-button
+                            matTooltip="Деталі"
+                            (click)="openUser(row)">
+                      <mat-icon>open_in_new</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: userColumns;" class="user-row"></tr>
+              </table>
+            }
+          </div>
+        </mat-tab>
+
+      </mat-tab-group>
     </mat-card>
 
   }

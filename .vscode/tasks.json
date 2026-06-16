@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+
+    // ── 1. Збірка бекенду ──────────────────────────────────────────────────────
+    {
+      "label": "build: backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/EventAggregator/EventAggregator.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": { "reveal": "silent" }
+    },
+
+    // ── 2. Angular dev-сервер (запускається після збірки бекенду) ──────────────
+    {
+      "label": "serve: frontend",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/event-aggregator-client"
+      },
+      "dependsOn": ["build: backend"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "label": "Angular"
+      },
+      "problemMatcher": {
+        "owner": "angular",
+        "pattern": [{ "regexp": "^(.*)$", "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Building",
+          "endsPattern": "localhost:4200"
+        }
+      }
+    }
+
+  ]
+}

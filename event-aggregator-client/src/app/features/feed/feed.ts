@@ -2,7 +2,6 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -24,7 +23,7 @@ import { EventCard } from '../../shared/components/event-card/event-card';
   standalone: true,
   imports: [
     FormsModule,
-    MatSidenavModule, MatListModule, MatCheckboxModule,
+    MatSidenavModule, MatListModule,
     MatButtonModule, MatIconModule, MatInputModule,
     MatFormFieldModule, MatProgressSpinnerModule,
     MatPaginatorModule, MatDividerModule,

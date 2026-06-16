@@ -8,6 +8,12 @@ export interface User {
   photoUrl?: string;
   reportFrequency: string;
   lastReportSent?: string;
+  // Telegram
+  telegramNotificationsEnabled: boolean;
+  telegramUsername?: string;
+  telegramChatId?: number;
+  preferredLanguage?: string;
+  preferredCategories?: string;
   filters: Filter[];
 }
 
@@ -23,4 +29,11 @@ export interface UpdateUserRequest {
   lastName?: string;
   photoUrl?: string;
   reportFrequency?: string;
+  preferredLanguage?: string;
+  preferredCategories?: string;
+}
+
+export interface UpdateTelegramRequest {
+  telegramNotificationsEnabled: boolean;
+  telegramUsername?: string;
 }

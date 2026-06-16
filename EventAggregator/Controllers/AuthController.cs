@@ -54,6 +54,9 @@ public class AuthController : ControllerBase
         if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized(new { message = "Невірний email або пароль" });
 
+        if (user.IsBanned)
+            return Unauthorized(new { message = "Ваш акаунт заблоковано. Зв'яжіться з адміністратором: adamyocardium@gmail.com" });
+
         if (user.TwoFactorEnabled)
             return Ok(new { requiresTwoFactor = true, userId = user.Id });
 

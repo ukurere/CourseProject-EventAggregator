@@ -26,7 +26,13 @@ export class AuthService {
   }
 
   login(req: LoginRequest) {
-    return this.http.post<AuthResponse | TwoFactorRequired>(`${this.base}/login`, req);
+    return this.http.post<AuthResponse | TwoFactorRequired>(`${this.base}/login`, req).pipe(
+      tap(res => {
+        if (!('requiresTwoFactor' in res)) {
+          this.saveSession(res as AuthResponse);
+        }
+      })
+    );
   }
 
   verifyTwoFactor(userId: number, code: string) {

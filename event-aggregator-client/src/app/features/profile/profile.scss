@@ -74,6 +74,46 @@
   input { letter-spacing: 0.25em; font-size: 1.1rem; text-align: center; }
 }
 
+// ── Мова/Категорія кнопки ─────────────────────────────────────────────────
+
+.group-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.lang-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  button {
+    border-radius: 20px;
+    min-width: 100px;
+    transition: background 0.15s, color 0.15s;
+
+    &.active {
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      border-color: #1a73e8;
+      font-weight: 500;
+    }
+  }
+}
+
+.send-now-block {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.hint.muted { color: #bbb; }
+
 // ── Підписки ──────────────────────────────────────────────────────────────
 
 .filter-group {
@@ -229,6 +269,76 @@
 
     .day  { font-size: 1rem; font-weight: 700; color: #1a73e8; line-height: 1; }
     .mon  { font-size: 0.6rem; color: #5a8dee; text-transform: uppercase; }
+  }
+}
+
+// ── Telegram-секція ───────────────────────────────────────────────────────
+
+.section-divider { margin: 28px 0 20px; }
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+
+  .tg-icon { color: #229ed9; }
+}
+
+.telegram-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+
+  .tg-field {
+    width: 100%;
+  }
+
+  .tg-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    code {
+      background: rgba(0,0,0,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    &.connected {
+      background: #e6f4ea;
+      color: #1e7e34;
+      mat-icon { color: #34a853; }
+    }
+
+    &.pending {
+      background: #fff8e1;
+      color: #795548;
+      mat-icon { color: #f9a825; }
+    }
+  }
+
+  .tg-save-btn {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 

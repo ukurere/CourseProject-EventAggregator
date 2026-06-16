@@ -3,6 +3,7 @@ using System;
 using EventAggregator.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventAggregator.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260528191942_AddIsBanned")]
+    partial class AddIsBanned
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -156,12 +159,6 @@ namespace EventAggregator.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PreferredCategories")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PreferredLanguage")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ReportFrequency")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -232,27 +229,6 @@ namespace EventAggregator.Migrations
                     b.ToTable("UserFilters");
                 });
 
-            modelBuilder.Entity("EventAggregator.API.Models.UserKeyword", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Keyword")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserKeywords");
-                });
-
             modelBuilder.Entity("EventAggregator.API.Models.Event", b =>
                 {
                     b.HasOne("EventAggregator.API.Models.FeedSource", "FeedSource")
@@ -301,17 +277,6 @@ namespace EventAggregator.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EventAggregator.API.Models.UserKeyword", b =>
-                {
-                    b.HasOne("EventAggregator.API.Models.User", "User")
-                        .WithMany("UserKeywords")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("EventAggregator.API.Models.Event", b =>
                 {
                     b.Navigation("UserEventStatuses");
@@ -332,8 +297,6 @@ namespace EventAggregator.Migrations
                     b.Navigation("UserEventStatuses");
 
                     b.Navigation("UserFilters");
-
-                    b.Navigation("UserKeywords");
                 });
 #pragma warning restore 612, 618
         }

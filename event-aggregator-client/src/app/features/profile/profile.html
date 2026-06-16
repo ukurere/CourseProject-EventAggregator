@@ -38,6 +38,84 @@
             <button mat-raised-button color="primary" (click)="saveProfile()">
               <mat-icon>save</mat-icon> Зберегти
             </button>
+
+            <!-- ── Telegram-розсилка ── -->
+            <mat-divider class="section-divider" />
+            <div class="section-title">
+              <mat-icon class="tg-icon">send</mat-icon>
+              <span>Telegram-сповіщення</span>
+            </div>
+
+            <div class="telegram-block">
+              <mat-slide-toggle
+                [checked]="tgEnabled()"
+                (change)="tgEnabled.set($event.checked)">
+                Отримувати дайджести у Telegram
+              </mat-slide-toggle>
+
+              @if (tgEnabled()) {
+                <mat-form-field appearance="outline" class="tg-field">
+                  <mat-label>Telegram юзернейм</mat-label>
+                  <span matTextPrefix>@&nbsp;</span>
+                  <input matInput
+                         [ngModel]="tgUsername()"
+                         (ngModelChange)="tgUsername.set($event)"
+                         placeholder="your_username" />
+                  <mat-hint>Введіть юзернейм без @ і натисніть «Зберегти»</mat-hint>
+                </mat-form-field>
+
+                <!-- Статус підключення -->
+                @if (tgChatId()) {
+                  <div class="tg-status connected">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Бот підключено — ви будете отримувати дайджести в Telegram</span>
+                  </div>
+                } @else if (tgUsername()) {
+                  <div class="tg-status pending">
+                    <mat-icon>schedule</mat-icon>
+                    <span>
+                      Збережіть та напишіть команду&nbsp;<code>/start</code>&nbsp;нашому Telegram-боту,
+                      щоб підключити акаунт
+                    </span>
+                  </div>
+                }
+              }
+
+              <button mat-stroked-button
+                      [disabled]="tgSaving()"
+                      (click)="saveTelegram()"
+                      class="tg-save-btn">
+                @if (tgSaving()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>save</mat-icon> }
+                Зберегти Telegram
+              </button>
+            </div>
+
+            <!-- ── Надіслати зараз ── -->
+            <mat-divider class="section-divider" />
+            <div class="section-title">
+              <mat-icon>send</mat-icon>
+              <span>Надіслати дайджест зараз</span>
+            </div>
+            <div class="send-now-block">
+              <button mat-stroked-button
+                      [disabled]="sendingEmail()"
+                      (click)="sendEmailNow()">
+                @if (sendingEmail()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>email</mat-icon> }
+                На пошту
+              </button>
+
+              <button mat-stroked-button
+                      [disabled]="sendingTelegram() || !tgChatId()"
+                      [matTooltip]="tgChatId() ? '' : 'Спочатку підключіть Telegram'"
+                      (click)="sendTelegramNow()">
+                @if (sendingTelegram()) { <mat-spinner diameter="18" /> }
+                @else { <mat-icon>send</mat-icon> }
+                У Telegram
+              </button>
+            </div>
+
           }
         </div>
       </mat-tab>
@@ -91,19 +169,95 @@
           <mat-icon>tune</mat-icon>&nbsp;Підписки
         </ng-template>
         <div class="tab-content">
-          <p class="hint">Обрані фільтри формують стрічку та email-дайджест.</p>
-          @for (group of allGroups(); track group.type) {
-            <div class="filter-group">
-              <p class="group-label">{{ group.label }}</p>
-              <mat-chip-set>
-                @for (filter of group.filters; track filter.id) {
-                  <mat-chip [class.subscribed]="isSubscribed(filter.id)" (click)="toggleFilter(filter)">
-                    @if (isSubscribed(filter.id)) { <mat-icon matChipLeading>check</mat-icon> }
-                    {{ filter.name }}
-                  </mat-chip>
-                }
-              </mat-chip-set>
-            </div>
+          <p class="hint">Обрані фільтри та ключові слова формують стрічку та email-дайджест.</p>
+
+          <!-- ── Мова ── -->
+          <p class="group-label">Мова</p>
+          <div class="lang-buttons">
+            <button mat-stroked-button
+                    [class.active]="preferredLanguage() === 'uk'"
+                    (click)="setLanguage('uk')">
+              🇺🇦 Українська
+            </button>
+            <button mat-stroked-button
+                    [class.active]="preferredLanguage() === 'en'"
+                    (click)="setLanguage('en')">
+              🇬🇧 English
+            </button>
+          </div>
+          <p class="hint muted">Якщо нічого не обрано — показуються всі мови.</p>
+
+          <mat-divider class="section-divider" />
+
+          <!-- ── Категорії ── -->
+          <p class="group-label">Категорія</p>
+          <div class="lang-buttons">
+            @for (cat of CATEGORIES; track cat.value) {
+              <button mat-stroked-button
+                      [class.active]="preferredCategories().has(cat.value)"
+                      (click)="toggleCategory(cat.value)">
+                {{ cat.label }}
+              </button>
+            }
+          </div>
+          <p class="hint muted">Якщо нічого не обрано — показуються всі категорії.</p>
+
+          <mat-divider class="section-divider" />
+
+          <!-- ── Надіслати дайджест ── -->
+          <p class="group-label">Надіслати дайджест зараз</p>
+          <div class="send-now-block">
+            <button mat-stroked-button
+                    [disabled]="sendingEmail()"
+                    (click)="sendEmailNow()">
+              @if (sendingEmail()) { <mat-spinner diameter="18" /> }
+              @else { <mat-icon>email</mat-icon> }
+              На пошту
+            </button>
+            <button mat-stroked-button
+                    [disabled]="sendingTelegram() || !tgChatId()"
+                    [matTooltip]="tgChatId() ? '' : 'Спочатку підключіть Telegram у вкладці Профіль'"
+                    (click)="sendTelegramNow()">
+              @if (sendingTelegram()) { <mat-spinner diameter="18" /> }
+              @else { <mat-icon>send</mat-icon> }
+              У Telegram
+            </button>
+          </div>
+
+          <mat-divider class="section-divider" />
+
+          <!-- ── Власні ключові слова ── -->
+          <mat-divider class="section-divider" />
+          <p class="group-label">Власні ключові слова</p>
+          <p class="hint">Додайте будь-які слова — система шукатиме їх у заголовках і описах подій.</p>
+
+          <div class="keyword-input-row">
+            <mat-form-field appearance="outline" class="keyword-field">
+              <mat-label>Нове ключове слово</mat-label>
+              <input matInput
+                     [(ngModel)]="newKeyword"
+                     (keydown)="onKeywordEnter($event)"
+                     placeholder="наприклад: джаз" />
+              <mat-hint>Натисніть Enter або кнопку «+»</mat-hint>
+            </mat-form-field>
+            <button mat-mini-fab color="primary"
+                    [disabled]="!newKeyword.trim()"
+                    (click)="addKeyword()">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+
+          @if (userKeywords().length > 0) {
+            <mat-chip-set class="keyword-chips">
+              @for (kw of userKeywords(); track kw.id) {
+                <mat-chip (removed)="removeKeyword(kw)">
+                  {{ kw.keyword }}
+                  <button matChipRemove><mat-icon>cancel</mat-icon></button>
+                </mat-chip>
+              }
+            </mat-chip-set>
+          } @else {
+            <p class="hint muted">Ще немає ключових слів</p>
           }
         </div>
       </mat-tab>
@@ -175,7 +329,7 @@
                     </button>
                   </h3>
                 } @else {
-                  <h3><mat-icon>event_note</mat-icon> Усі заплановані події</h3>
+                  <h3><mat-icon>event_note</mat-icon> Усі відмічені матеріали</h3>
                 }
 
                 @if (eventsForDate().length === 0) {

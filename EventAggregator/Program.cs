@@ -4,6 +4,7 @@ using EventAggregator.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,17 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+var dbPath = Environment.GetEnvironmentVariable("DB_PATH") is string envDbPath
+    ? $"Data Source={envDbPath}"
+    : builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=events.db";
+
+// Ensure the SQLite database directory exists (needed for Railway volumes)
+var dbFile = dbPath.Replace("Data Source=", "").Split(';')[0].Trim();
+var dbDir  = Path.GetDirectoryName(dbFile);
+if (!string.IsNullOrEmpty(dbDir))
+    Directory.CreateDirectory(dbDir);
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=events.db"));
+    options.UseSqlite(dbPath));
 
 builder.Services.AddHttpClient<RssFeedService>(client =>
 {
@@ -28,6 +38,19 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<DigestService>();
 builder.Services.AddHostedService<DigestBackgroundService>();
 builder.Services.AddHostedService<RssPollBackgroundService>();
+
+// ── Telegram Bot ──────────────────────────────────────────────────────────
+var telegramToken = builder.Configuration["Telegram:BotToken"];
+if (!string.IsNullOrWhiteSpace(telegramToken))
+{
+    builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(telegramToken));
+    builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+    builder.Services.AddHostedService<TelegramBotBackgroundService>();
+}
+else
+{
+    builder.Services.AddScoped<ITelegramBotService, NullTelegramBotService>();
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -45,7 +68,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim(System.Security.Claims.ClaimTypes.Email,
+                            "adamyocardium@gmail.com"));
+});
 
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
@@ -70,9 +98,21 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();

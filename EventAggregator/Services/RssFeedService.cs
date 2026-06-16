@@ -40,12 +40,47 @@ public class RssFeedService
 
     public async Task RefreshFeedAsync(FeedSource source)
     {
-        var stream = await _httpClient.GetStreamAsync(source.FeedUrl);
+        // ── 1. HTTP-запит з перевіркою статусу ───────────────────────────────
+        using var response = await _httpClient.GetAsync(source.FeedUrl);
 
-        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
-        using var reader = XmlReader.Create(stream, settings);
-        var feed = SyndicationFeed.Load(reader);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Джерело {Name}: HTTP {Status} — пропускаємо",
+                source.Name, (int)response.StatusCode);
+            return;
+        }
 
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
+        if (contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Джерело {Name}: повернуло HTML замість RSS — пропускаємо",
+                source.Name);
+            return;
+        }
+
+        // ── 2. Парсинг XML (толерантний до поганих символів та DTD) ──────────
+        using var stream = await response.Content.ReadAsStreamAsync();
+
+        var settings = new XmlReaderSettings
+        {
+            DtdProcessing    = DtdProcessing.Ignore,
+            CheckCharacters  = false,          // ігноруємо неприпустимі символи (0x02 тощо)
+            IgnoreWhitespace = false,
+        };
+
+        SyndicationFeed feed;
+        try
+        {
+            using var reader = XmlReader.Create(stream, settings);
+            feed = SyndicationFeed.Load(reader);
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning("Джерело {Name}: некоректний XML — {Msg}", source.Name, ex.Message);
+            return;
+        }
+
+        // ── 3. Збереження нових подій ─────────────────────────────────────────
         var existingUrls = (await _db.Events
             .Where(e => e.FeedSourceId == source.Id)
             .Select(e => e.SourceUrl)
@@ -62,16 +97,16 @@ public class RssFeedService
 
             newEvents.Add(new Event
             {
-                Title = item.Title?.Text ?? string.Empty,
+                Title       = item.Title?.Text ?? string.Empty,
                 Description = item.Summary?.Text ?? string.Empty,
-                SourceUrl = url,
+                SourceUrl   = url,
                 PublishedDate = item.PublishDate == default
                     ? DateTime.UtcNow
                     : item.PublishDate.UtcDateTime,
                 FeedSourceId = source.Id,
-                Category = source.Category,
-                Author = item.Authors.FirstOrDefault()?.Name,
-                ImageUrl = item.Links
+                Category     = source.Category,
+                Author       = item.Authors.FirstOrDefault()?.Name,
+                ImageUrl     = item.Links
                     .FirstOrDefault(l => l.RelationshipType == "enclosure")?.Uri?.ToString(),
             });
         }

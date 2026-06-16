@@ -28,7 +28,7 @@ public class DigestController : ControllerBase
         return Ok(new { message = "Дайджести оброблено" });
     }
 
-    /// <summary>Примусово надіслати дайджест конкретному користувачу (для тестування)</summary>
+    /// <summary>Надіслати дайджест на пошту (кнопка «Надіслати зараз»)</summary>
     [HttpPost("send/{userId:int}")]
     public async Task<IActionResult> SendToUser(int userId)
     {
@@ -41,8 +41,40 @@ public class DigestController : ControllerBase
 
         try
         {
-            await _digestService.SendDigestAsync(user);
-            return Ok(new { message = $"Дайджест надіслано на {user.Email}" });
+            var count = await _digestService.SendNowAsync(user, telegramOnly: false);
+            return Ok(new { message = $"Дайджест надіслано на {user.Email} ({count} подій)" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>Надіслати дайджест тільки в Telegram (кнопка «У Telegram»)</summary>
+    [HttpPost("send-telegram/{userId:int}")]
+    public async Task<IActionResult> SendTelegramToUser(int userId)
+    {
+        var user = await _db.Users
+            .Include(u => u.UserFilters)
+                .ThenInclude(uf => uf.Filter)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null) return NotFound();
+        if (!user.TelegramChatId.HasValue)
+            return BadRequest(new { error = "Telegram не підключено. Спочатку надішліть /start боту." });
+
+        try
+        {
+            var count = await _digestService.SendNowAsync(user, telegramOnly: true);
+            return Ok(new { message = $"Дайджест надіслано в Telegram ({count} подій)" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {

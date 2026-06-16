@@ -3,6 +3,7 @@ using System;
 using EventAggregator.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventAggregator.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260531233959_AddUserKeywords")]
+    partial class AddUserKeywords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -154,12 +157,6 @@ namespace EventAggregator.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhotoUrl")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PreferredCategories")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PreferredLanguage")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ReportFrequency")

@@ -9,15 +9,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule, MatCalendarCellClassFunction } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../core/services/auth.service';
 import { UsersService } from '../../core/services/users.service';
 import { FiltersService } from '../../core/services/filters.service';
+import { DigestService } from '../../core/services/digest.service';
+import { KeywordsService, UserKeyword } from '../../core/services/keywords.service';
 import { Filter, FilterGroup } from '../../core/models/filter.model';
 import { EventItem } from '../../core/models/event.model';
 import { User } from '../../core/models/user.model';
@@ -29,8 +33,8 @@ import { User } from '../../core/models/user.model';
     FormsModule, DatePipe, RouterLink, QRCodeComponent,
     MatButtonModule, MatIconModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatChipsModule,
-    MatDividerModule, MatProgressSpinnerModule, MatTabsModule,
-    MatDatepickerModule, MatNativeDateModule,
+    MatDividerModule, MatSlideToggleModule, MatProgressSpinnerModule, MatTabsModule,
+    MatDatepickerModule, MatNativeDateModule, MatTooltipModule,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -39,6 +43,8 @@ export class Profile implements OnInit {
   private auth           = inject(AuthService);
   private usersService   = inject(UsersService);
   private filtersService = inject(FiltersService);
+  private digestService  = inject(DigestService);
+  private keywordsService = inject(KeywordsService);
   private snackBar       = inject(MatSnackBar);
 
   user           = signal<User | null>(null);
@@ -47,6 +53,31 @@ export class Profile implements OnInit {
   savedEvents    = signal<EventItem[]>([]);
   calendarEvents = signal<EventItem[]>([]);
   loading        = signal(true);
+
+  // Мова / категорії
+  preferredLanguage   = signal<string>('');
+  preferredCategories = signal<Set<string>>(new Set());
+
+  readonly CATEGORIES = [
+    { value: 'events',  label: '📅 Події' },
+    { value: 'news',    label: '📰 Новини' },
+    { value: 'tech',    label: '💻 IT/Tech' },
+    { value: 'science', label: '🔬 Наука' },
+  ];
+
+  // Ключові слова
+  userKeywords   = signal<UserKeyword[]>([]);
+  newKeyword     = '';
+
+  // Send now
+  sendingEmail    = signal(false);
+  sendingTelegram = signal(false);
+
+  // Telegram
+  tgEnabled  = signal(false);
+  tgUsername = signal('');
+  tgChatId   = signal<number | null>(null);
+  tgSaving   = signal(false);
 
   // 2FA
   twoFactorEnabled = signal(false);
@@ -86,6 +117,13 @@ export class Profile implements OnInit {
       next: u => {
         this.user.set(u);
         this.userFilterIds.set(new Set(u.filters.map(f => f.id)));
+        this.tgEnabled.set(u.telegramNotificationsEnabled);
+        this.tgUsername.set(u.telegramUsername ?? '');
+        this.tgChatId.set(u.telegramChatId ?? null);
+        this.preferredLanguage.set(u.preferredLanguage ?? '');
+        this.preferredCategories.set(
+          new Set((u.preferredCategories ?? '').split(',').filter(Boolean))
+        );
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -94,6 +132,7 @@ export class Profile implements OnInit {
     this.twoFactorEnabled.set(this.auth.currentUser()?.twoFactorEnabled ?? false);
     this.usersService.getSavedEvents(this.userId).subscribe(e => this.savedEvents.set(e));
     this.usersService.getCalendarEvents(this.userId).subscribe(e => this.calendarEvents.set(e));
+    this.keywordsService.getAll(this.userId).subscribe(k => this.userKeywords.set(k));
   }
 
   isSubscribed(filterId: number) { return this.userFilterIds().has(filterId); }
@@ -113,6 +152,28 @@ export class Profile implements OnInit {
     }
   }
 
+  toggleCategory(cat: string) {
+    this.preferredCategories.update(s => {
+      const n = new Set(s);
+      n.has(cat) ? n.delete(cat) : n.add(cat);
+      return n;
+    });
+    this.savePreferences();
+  }
+
+  setLanguage(lang: string) {
+    this.preferredLanguage.set(this.preferredLanguage() === lang ? '' : lang);
+    this.savePreferences();
+  }
+
+  savePreferences() {
+    const cats = [...this.preferredCategories()].join(',');
+    this.usersService.update(this.userId, {
+      preferredLanguage: this.preferredLanguage() || undefined,
+      preferredCategories: cats || undefined,
+    }).subscribe();
+  }
+
   saveProfile() {
     const u = this.user();
     if (!u) return;
@@ -121,6 +182,24 @@ export class Profile implements OnInit {
       lastName: u.lastName,
       reportFrequency: u.reportFrequency,
     }).subscribe(() => this.snackBar.open('Профіль збережено', '', { duration: 2000 }));
+  }
+
+  saveTelegram() {
+    this.tgSaving.set(true);
+    this.usersService.updateTelegram(this.userId, {
+      telegramNotificationsEnabled: this.tgEnabled(),
+      telegramUsername: this.tgUsername().trim().replace(/^@/, '') || undefined,
+    }).subscribe({
+      next: res => {
+        this.tgChatId.set(res.telegramChatId ?? null);
+        this.tgSaving.set(false);
+        this.snackBar.open('Telegram-налаштування збережено', '', { duration: 2500 });
+      },
+      error: () => {
+        this.tgSaving.set(false);
+        this.snackBar.open('Помилка збереження', 'ОК', { duration: 3000 });
+      },
+    });
   }
 
   onDateSelected(date: Date | null) {
@@ -132,13 +211,77 @@ export class Profile implements OnInit {
     }
   }
 
+  // ── Ключові слова ────────────────────────────────────────────────────────
+
+  addKeyword() {
+    const kw = this.newKeyword.trim();
+    if (!kw) return;
+    this.keywordsService.add(this.userId, kw).subscribe({
+      next: k => {
+        this.userKeywords.update(list => [...list, k]);
+        this.newKeyword = '';
+        this.snackBar.open(`«${k.keyword}» додано`, '', { duration: 2000 });
+      },
+      error: err => this.snackBar.open(err.error?.error ?? 'Помилка', 'ОК', { duration: 3000 }),
+    });
+  }
+
+  removeKeyword(kw: UserKeyword) {
+    this.keywordsService.delete(this.userId, kw.id).subscribe({
+      next: () => {
+        this.userKeywords.update(list => list.filter(k => k.id !== kw.id));
+        this.snackBar.open(`«${kw.keyword}» видалено`, '', { duration: 2000 });
+      },
+    });
+  }
+
+  onKeywordEnter(event: KeyboardEvent) {
+    if (event.key === 'Enter') this.addKeyword();
+  }
+
+  // ── Send now ─────────────────────────────────────────────────────────────
+
+  sendEmailNow() {
+    this.sendingEmail.set(true);
+    this.digestService.sendNow(this.userId).subscribe({
+      next: res => {
+        this.sendingEmail.set(false);
+        this.snackBar.open(res.message, '', { duration: 3000 });
+      },
+      error: err => {
+        this.sendingEmail.set(false);
+        this.snackBar.open(err.error?.error ?? 'Помилка відправки', 'ОК', { duration: 4000 });
+      },
+    });
+  }
+
+  sendTelegramNow() {
+    this.sendingTelegram.set(true);
+    this.digestService.sendTelegramNow(this.userId).subscribe({
+      next: res => {
+        this.sendingTelegram.set(false);
+        this.snackBar.open(res.message, '', { duration: 3000 });
+      },
+      error: err => {
+        this.sendingTelegram.set(false);
+        this.snackBar.open(err.error?.error ?? 'Помилка відправки', 'ОК', { duration: 4000 });
+      },
+    });
+  }
+
   // ── 2FA ──────────────────────────────────────────────────────────────────
 
   setupTwoFactor() {
     this.twoFaLoading.set(true);
     this.auth.setupTwoFactor().subscribe({
       next: res => { this.qrUri.set(res.otpauthUri); this.twoFaLoading.set(false); },
-      error: ()  => this.twoFaLoading.set(false),
+      error: err => {
+        this.twoFaLoading.set(false);
+        const msg = err.status === 401
+          ? 'Сесія закінчилась — увійдіть знову'
+          : (err.error?.message ?? 'Помилка налаштування 2FA');
+        this.snackBar.open(msg, 'ОК', { duration: 4000 });
+      },
     });
   }
 

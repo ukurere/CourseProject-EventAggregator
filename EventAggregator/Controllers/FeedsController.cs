@@ -39,6 +39,6 @@ public class FeedsController : ControllerBase
         if (source is null) return NotFound();
 
         await _feedService.RefreshFeedAsync(source);
-        return Ok(new { message = $"Стрічку «{source.Name}» оновлено" });
+        return Ok(new { message = $"Стрічку «{source.Name}» оновлено", lastFetched = source.LastFetched });
     }
 }

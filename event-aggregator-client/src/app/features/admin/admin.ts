@@ -10,7 +10,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { FeedsService, AdminStats, SourceStats } from '../../core/services/feeds.service';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog } from '@angular/material/dialog';
+import { FeedsService, AdminStats, SourceStats, AdminUser } from '../../core/services/feeds.service';
+import { UserDetailDialog } from './user-detail-dialog';
 
 @Component({
   selector: 'app-admin',
@@ -19,7 +23,7 @@ import { FeedsService, AdminStats, SourceStats } from '../../core/services/feeds
     DatePipe, DecimalPipe,
     MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatProgressBarModule, MatChipsModule,
-    MatTooltipModule, MatDividerModule,
+    MatTooltipModule, MatDividerModule, MatSlideToggleModule, MatTabsModule,
   ],
   templateUrl: './admin.html',
   styleUrl:    './admin.scss',
@@ -27,21 +31,38 @@ import { FeedsService, AdminStats, SourceStats } from '../../core/services/feeds
 export class Admin implements OnInit {
   private feedsService = inject(FeedsService);
   private snackBar     = inject(MatSnackBar);
+  private dialog       = inject(MatDialog);
 
   stats         = signal<AdminStats | null>(null);
   loading       = signal(true);
   refreshingAll = signal(false);
   refreshingId  = signal<number | null>(null);
+  togglingId    = signal<number | null>(null);
 
-  readonly columns = ['name', 'category', 'language', 'events', 'lastFetched', 'status', 'actions'];
+  users        = signal<AdminUser[]>([]);
+  usersLoading = signal(true);
 
-  ngOnInit() { this.loadStats(); }
+  readonly sourceColumns = ['name', 'category', 'language', 'events', 'lastFetched', 'status', 'actions'];
+  readonly userColumns   = ['avatar', 'name', 'email', 'filters', 'telegram', 'status', 'actions'];
+
+  ngOnInit() {
+    this.loadStats();
+    this.loadUsers();
+  }
 
   loadStats() {
     this.loading.set(true);
     this.feedsService.getStats().subscribe({
       next: s  => { this.stats.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  loadUsers() {
+    this.usersLoading.set(true);
+    this.feedsService.getUsers().subscribe({
+      next: u  => { this.users.set(u); this.usersLoading.set(false); },
+      error: () => this.usersLoading.set(false),
     });
   }
 
@@ -66,13 +87,58 @@ export class Admin implements OnInit {
       next: r => {
         this.refreshingId.set(null);
         this.snackBar.open(r.message, '', { duration: 3000 });
-        this.loadStats();
+        source.lastFetched = r.lastFetched;
+        const s = this.stats();
+        if (s) this.stats.set({ ...s });
       },
       error: () => {
         this.refreshingId.set(null);
         this.snackBar.open('Помилка оновлення', 'ОК', { duration: 3000 });
       },
     });
+  }
+
+  toggleActive(source: SourceStats) {
+    this.togglingId.set(source.id);
+    this.feedsService.toggleActive(source.id).subscribe({
+      next: r => {
+        source.isActive = r.isActive;
+        this.togglingId.set(null);
+        const s = this.stats();
+        if (s) {
+          s.activeSources += r.isActive ? 1 : -1;
+          this.stats.set({ ...s });
+        }
+      },
+      error: () => {
+        this.togglingId.set(null);
+        this.snackBar.open('Помилка зміни статусу', 'ОК', { duration: 3000 });
+      },
+    });
+  }
+
+  openUser(user: AdminUser) {
+    const ref = this.dialog.open(UserDetailDialog, {
+      data: { ...user },
+      width: '480px',
+    });
+
+    ref.afterClosed().subscribe(result => {
+      if (!result) return;
+      if (result.action === 'delete') {
+        this.users.update(list => list.filter(u => u.id !== user.id));
+        const s = this.stats();
+        if (s) this.stats.set({ ...s, totalUsers: s.totalUsers - 1 });
+      } else if (result.action === 'ban') {
+        this.users.update(list =>
+          list.map(u => u.id === user.id ? { ...u, isBanned: result.isBanned } : u)
+        );
+      }
+    });
+  }
+
+  initials(u: AdminUser) {
+    return (u.firstName[0] + u.lastName[0]).toUpperCase();
   }
 
   timeAgo(date: string | null): string {
